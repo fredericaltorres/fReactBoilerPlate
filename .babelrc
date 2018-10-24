@@ -1,0 +1,15 @@
+{
+  "presets": ["react", ["env", { "modules": false }]],
+  "plugins": [
+    "transform-class-properties",
+    "transform-object-rest-spread",
+    "react-hot-loader/babel", 
+    "babel-plugin-transform-object-rest-spread"
+  ],
+  "env": {
+    "test": {
+      "presets": ["react", ["env", { "modules": "commonjs" }]],
+      "plugins": ["transform-es2015-modules-commonjs"]
+    }
+  }
+}
