@@ -42,7 +42,9 @@ class TodoItems extends React.PureComponent {
 
 		this.loadToDoItemsFromDatabase();
 	}
-
+	googleLogin() {
+		firestoreManager.googleLogin();
+	}
 	// --- Entity operations ---
 
 	updateToDo = (todo) => {
@@ -109,6 +111,11 @@ class TodoItems extends React.PureComponent {
 			</button> 
 			&nbsp;
 			<button type="button" className={className}>{message}</button>			
+
+			<button disabled={this.props.isLoading} type="button" className="btn btn-primary" 
+            		onClick = {this.googleLogin}>Login
+			</button> 
+
 			&nbsp;&nbsp;			
 			<input type="checkbox" style={{transform: 'scale(1.75)'}} id="chkShowDate"
 				  checked={this.state.showDate} onChange={this.onShowDateCheckboxClick} 
@@ -166,6 +173,8 @@ class TodoItems extends React.PureComponent {
 		else if (event.which === ENTER_KEY) 
 			this.handleSubmit(event);
 	}
+
+	
 	render() {
 
 		return (
@@ -186,7 +195,10 @@ class TodoItems extends React.PureComponent {
 				<ul className="list-group" style={{marginTop:'5px'}}>
 					{this.renderToDoItemsToJsx(this.state.todoItems)}
                 </ul>
-                this.state.timeStamp: {this.state.timeStamp} 
+				<small>
+                timeStamp: {this.state.timeStamp} <br/>
+				Logged on user: {firestoreManager.getCurrentUser() ? firestoreManager.getCurrentUser().displayName: 'None'}
+				</small>
 			</section>
 		); 
 	}

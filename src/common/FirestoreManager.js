@@ -4,7 +4,15 @@ import { runInNewContext } from 'vm';
 
 const firestoreManagerConfig = {
 
+	// https://console.developers.google.com/apis/credentials? 
+	// https://console.developers.google.com/apis/credentials?pli=1&project=api-project-272201949745&folder&organizationId
+
 	apiKey: "AIzaSyDZwgZ8wGSbfstXLuvr9iROHTL5YUVzJ34",
+
+	// apiKey: "AIzaSyB3BLrGo3Y0qlMDJqvuP9JqYIHeDG5Ty-w",	
+
+	legacyServerKey : "AIzaSyBW4rDtW7IKIIQWF31ak8bRgfrUyWwRZbU",	
+
 	authDomain: "fredtodo-f553b.firebaseapp.com",
 	databaseURL: "https://fredtodo-f553b.firebaseio.com",
 	projectId: "fredtodo-f553b",
@@ -18,13 +26,49 @@ class FirestoreManager {
 	
 	constructor() {
 
-	if(!FirestoreManager._initialized) {            
+		if(!FirestoreManager._initialized) {            
 			
 			this.name = 'FirestoreManager';
-			Tracer.log('FirestoreManager init', this);
+			Tracer.log(`FirestoreManager init`, this);
 			firebase.initializeApp(firestoreManagerConfig);
 			FirestoreManager._initialized = true;
+			this.__setUpOnAuthStateChanged();
 		}
+		// Tracer.log(`FirestoreManager currentUser:${firebase.auth().currentUser} ==========`, this);
+	}
+	__setUpOnAuthStateChanged () {
+
+		firebase.auth().onAuthStateChanged((user) => {
+			if (user) {
+				if (user != null) {
+					// let name = user.displayName;
+					// let email = user.email;
+					// let photoUrl = user.photoURL;
+					// let emailVerified = user.emailVerified;
+					// let uid = user.uid;  // The user's ID, unique to the Firebase project. Do NOT use
+					// 				 // this value to authenticate with your backend server, if
+					// 				 // you have one. Use User.getToken() instead.
+					Tracer.log(`FirestoreManager currentUser:${this.getCurrentUser().displayName} ==========`, this);
+				}
+			} else {
+				console.log('No user change');
+			}
+		});		
+	}
+	getCurrentUser() {
+		return firebase.auth().currentUser;
+	}
+	// https://firebase.google.com/docs/auth/web/manage-users?authuser=0
+	googleLogin() {
+
+		const provider = new firebase.auth.GoogleAuthProvider();
+		firebase.auth().signInWithPopup(provider).then((result) => {
+			const user = result.user;
+			console.dir(user);
+			alert(`Hello ${user.displayName}`);
+		}).catch((error) => {
+			console.error(error);
+		});
 	}
 	getFirestoreDB() {
 
@@ -41,6 +85,10 @@ class FirestoreManager {
 	getCollection(name) {
 
 		return new FirestoreManager().getFirestoreDB().collection(name);
+	}
+	showErrorToUser(msg) {
+		Tracer.error(msg);
+		alert(`ERROR: ${msg}`);
 	}
 	loadDataFromTable(collection, orderByColumn = null, orderDirection = 'desc', maxRecord = 100) {
 
@@ -85,7 +133,7 @@ class FirestoreManager {
 					Tracer.log(`updateRecord ${idFieldName}:${longId} succeeded`);
 					resolve(longId);
 				}).catch((error) => {
-					Tracer.error(`updateRecord ${idFieldName}:${longId} failed ${error}`);
+					this.showErrorToUser(`updateRecord ${idFieldName}:${longId} failed ${error}`);
 					reject(error);
 				});
 		});
@@ -103,7 +151,7 @@ class FirestoreManager {
 					Tracer.log(`deleteRecord  id:${id} succeeded`);
 					resolve(id);
 				}).catch((error) => {
-					Tracer.error(`deleteRecord  id:${id} failed ${error}`);
+					this.showErrorToUser(`deleteRecord  id:${id} failed ${error}`);
 					reject(error);
 				});
 		});
@@ -120,7 +168,7 @@ class FirestoreManager {
 					Tracer.log(`addRecord ${idFieldName}:${id} succeeded`);
 					resolve({ ...data, [idFieldName]:`${collection}/${id}` });
 				}).catch((error) => {
-					Tracer.error(`addRecord ${idFieldName}:${id} failed ${error}`);
+					this.showErrorToUser(`addRecord ${idFieldName}:${id} failed ${error}`);
 					reject(error);
 				});
 		});
