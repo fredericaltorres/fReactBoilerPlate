@@ -60,5 +60,8 @@ module.exports = {
       HTMLWebpackPluginConfig,
       new webpack.HotModuleReplacementPlugin(),
     ]
-    : [HTMLWebpackPluginConfig, DefinePluginConfig],
+    : [
+        HTMLWebpackPluginConfig, 
+        DefinePluginConfig
+      ],
 };

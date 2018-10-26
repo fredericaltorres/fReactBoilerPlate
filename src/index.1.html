@@ -13,8 +13,6 @@
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-    <!-- Firebase must be loaded before REACT start -->
-    <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase.js"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -24,17 +22,34 @@
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/5.5.5/firebase.js"></script>
 
-<script >
-/*
+<script>
+  var config = {
+    apiKey: "AIzaSyDZwgZ8wGSbfstXLuvr9iROHTL5YUVzJ34",
+    authDomain: "fredtodo-f553b.firebaseapp.com",
+    databaseURL: "https://fredtodo-f553b.firebaseio.com",
+    projectId: "fredtodo-f553b",
+    storageBucket: "fredtodo-f553b.appspot.com",
+    messagingSenderId: "308390253585"
+  };
+  firebase.initializeApp(config);
 
-const firestoreManager = new FirestoreManager();
-
+function getFirestoreDB() {
+    const app = firebase.app();
+    const firestore = firebase.firestore();
+    const settings = {timestampsInSnapshots: true};
+    firestore.settings(settings);
+    return firestore;
+}
+function getStorageRef() {
+    return firebase.storage().ref();        
+}
 function getPostsCollection() {
-    return firestoreManager.getCollection('posts');
+    return getFirestoreDB().collection('posts');
 }
 function getToDoItemsCollection() {
-    return firestoreManager.getCollection('todoItems');
+    return getFirestoreDB().collection('todoItems');
 }
 function loadAllTodoItems() {
     console.log(`loadAllTodoItems`);
@@ -61,5 +76,4 @@ function displayTodo() {
   loadAllTodoItems();
 }
 displayTodo();
-*/
 </script>
