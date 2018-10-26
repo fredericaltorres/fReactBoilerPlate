@@ -31,6 +31,11 @@ class Tracer {
 		this.internalTrace(`%c ${mm}%c ${m}`, 'color:green;', 'color:blue;', console.warn);
 		return mm + m;
 	}
+	error(m, instance = null) {
+		const mm = `[${this.getTimeStamp()}, ${this.getName(instance)}]`;
+		this.internalTrace(`%c ${mm}%c ${m}`, 'color:green;', 'color:red;', console.error);
+		return mm + m;
+	}
 }
 
 export default new Tracer();

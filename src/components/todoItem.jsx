@@ -1,58 +1,58 @@
 import React from "react";
 import PropTypes from "prop-types";
 import tracer from '../common/Tracer';
+import firestoreManager from "../common/FirestoreManager";
 
 const isMobile = false;
 
 class TodoItem extends React.PureComponent {
 	static propTypes = {		
-		taskDescription : PropTypes.string,
-		id 				: PropTypes.string,
-		isCompleted 	: PropTypes.bool,
-		// forceRefresh	: PropTypes.func.isRequired,
-		createdTime 	: PropTypes.string,
+		description : PropTypes.string,
+		id 				: PropTypes.string.isRequired,
+		isCompleted 	: PropTypes.bool.isRequired,
+		createdAt 		: PropTypes.object.isRequired,
+		showDate		: PropTypes.bool.isRequired,
+		updateToDo		: PropTypes.func.isRequired,
+		deleteToDo		: PropTypes.func.isRequired,
 	};
 	onDeleteClick = () => {
-		// const newTodo = {
-		// 	id : this.props.id,
-		// };
-		// store.dispatch(createToDoDeleteAsyncAction(newTodo));
+		
+		this.props.deleteToDo(this.props.id);
 	}
 	onCheckClick = (e) => {
 		const checked = e.target.checked;	
-		const newTodo = {
+		const todo = {
 			id : this.props.id,
-			taskDescription: this.props.taskDescription,
-			createdTime: this.props.createdTime,
+			description: this.props.description,
+			createdAt: this.props.createdAt,
 			isCompleted : checked,
-        };
-        alert(checked);
-		// store.dispatch(createToDoUpdateAsyncAction(newTodo));
-	}
+		};
+		this.props.updateToDo(todo);
+	}	
 	getDay (createdTime) {
-		createdTime = createdTime.replace("T", " ");
-		createdTime = createdTime.replace("Z", " ");
-		const index = createdTime.indexOf('.');
-		return createdTime.substring(0, index);
+
+		return firestoreManager.formatTimestamp(createdTime)
 	}
 	getCreatedTimeJsx() {
-		if(this.props.createdTime){
+
+		if(this.props.showDate){
 			if(isMobile) {
 				return (
 					<div>
 						<small>
-							{this.getDay(this.props.createdTime)}
+							{this.getDay(this.props.createdAt)}
 						</small>
 					</div>
 				);
 			}
 			else {
-				return ` - ${this.getDay(this.props.createdTime)}`				
+				return ` - ${this.getDay(this.props.createdAt)}`				
 			}			
 		}
 		else return null;
 	}
 	render() {
+		// tracer.log(`render todo:${JSON.stringify(this.props)}`);
 		return (
 			<li key={this.props.id} id={this.props.id} className="list-group-item">
 				<input 
@@ -62,7 +62,7 @@ class TodoItem extends React.PureComponent {
 				/>
 				&nbsp; Done &nbsp;
 				<button type="button" className="btn  btn-success" onClick={this.onDeleteClick}>Delete</button>
-				&nbsp; {this.props.taskDescription}
+				&nbsp; {this.props.description}
 				{this.getCreatedTimeJsx()}
 			</li>
 		);
