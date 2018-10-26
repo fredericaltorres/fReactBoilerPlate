@@ -4,7 +4,7 @@ import { runInNewContext } from 'vm';
 
 const firestoreManagerConfig = {
 
-	apiKey: "",
+	apiKey: "AIzaSyDZwgZ8wGSbfstXLuvr9iROHTL5YUVzJ34",
 	authDomain: "fredtodo-f553b.firebaseapp.com",
 	databaseURL: "https://fredtodo-f553b.firebaseio.com",
 	projectId: "fredtodo-f553b",
@@ -16,31 +16,31 @@ class FirestoreManager {
 
 	static _initialized = false;
 	
-    constructor() {
+	constructor() {
 
-        if(!FirestoreManager._initialized) {            
+	if(!FirestoreManager._initialized) {            
 			
 			this.name = 'FirestoreManager';
 			Tracer.log('FirestoreManager init', this);
-            firebase.initializeApp(firestoreManagerConfig);
-            FirestoreManager._initialized = true;
-        }
-    }
-    getFirestoreDB() {
+			firebase.initializeApp(firestoreManagerConfig);
+			FirestoreManager._initialized = true;
+		}
+	}
+	getFirestoreDB() {
 
-        const app = firebase.app();
-        const firestore = firebase.firestore();
-        const settings = { timestampsInSnapshots: true };
-        firestore.settings(settings);
-        return firestore;
-    }
-    getStorageRef() {
+		const app = firebase.app();
+		const firestore = firebase.firestore();
+		const settings = { timestampsInSnapshots: true };
+		firestore.settings(settings);
+		return firestore;
+	}
+	getStorageRef() {
 
-        return firebase.storage().ref();        
-    }
-    getCollection(name) {
+		return firebase.storage().ref();
+	}
+	getCollection(name) {
 
-        return new FirestoreManager().getFirestoreDB().collection(name);
+		return new FirestoreManager().getFirestoreDB().collection(name);
 	}
 	loadDataFromTable(collection, orderByColumn = null, orderDirection = 'desc', maxRecord = 100) {
 
@@ -114,7 +114,7 @@ class FirestoreManager {
 		return new Promise((resolve, reject) => {
 
 			Tracer.log(`addRecord data:${JSON.stringify(data)}`);
-			const id = Math.random().toString(16).substr(2, 16);
+			const id = this.getNewUniqueId();
 			this.getCollection(collection).doc(id).set(data)
 				.then(() => {
 					Tracer.log(`addRecord ${idFieldName}:${id} succeeded`);
@@ -125,12 +125,13 @@ class FirestoreManager {
 				});
 		});
 	};
-
 	// https://firebase.google.com/docs/reference/js/firebase.firestore.Timestamp
 	formatTimestamp(timestamp, format = 'YYYY/MM/DD h:mm:ss a') {
+
 		return moment(timestamp).format(format);
 	}
 	extractId(refId) {
+
 		const parts = refId.split('/');
 		if(parts.length > 0) {
 			return parts[parts.length-1];
@@ -138,8 +139,13 @@ class FirestoreManager {
 		return refId;
 	}
 	now() {
+
 		return firebase.firestore.Timestamp.now();
 	}
+	getNewUniqueId() {
+		
+		return Math.random().toString(16).substr(2, 16);
+	}	
 }  
 
 export default new FirestoreManager();

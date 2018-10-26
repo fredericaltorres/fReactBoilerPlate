@@ -4,39 +4,47 @@ import tracer from '../common/Tracer';
 import TodoItem from './todoItem';
 import firestoreManager from '../common/FirestoreManager';
 import ComponentUtil from '../common/ComponentUtil';
+import { ESCAPE_KEY, ENTER_KEY } from '../common/ComponentUtil';
 
-const ESCAPE_KEY = 27;
-const ENTER_KEY  = 13;
 
 const TODO_ITEMS_COLLECTION_NAME = 'todoItems';
 
+class ToDo {
+	static create(description) {
+		return { description, isCompleted: false, createdAt: firestoreManager.now() }
+	}	
+}
+
 class TodoItems extends React.PureComponent {
 
-    static propTypes = {		
+	static propTypes = {
 
 	};
-    state = {
+	state = {
 
 		timeStamp: new Date().getTime(),
 		editText :'',
 		showDate : false,
-        mqttNewMessage : null,
-        isLoading: true,
-        todoItems: [
-            // { createdAt:"2018-10-09T19:41:59.272621Z", description:'Description 1', isCompleted: false, id:'1' },
-            // { createdAt:"2018-10-09T19:41:59.272621Z", description:'Description 2', isCompleted: false, id:'2' }
-        ],
+		mqttNewMessage : null,
+		isLoading: true,
+		todoItems: [
+			// { createdAt:"2018-10-09T19:41:59.272621Z", description:'Description 1', isCompleted: false, id:'1' },
+			// { createdAt:"2018-10-09T19:41:59.272621Z", description:'Description 2', isCompleted: false, id:'2' }
+		],
 	};
 	constructor(props) {
 
 		super(props);
 		this.name = "TodoItems";
 		tracer.log('constructor', this);
-    }
-    componentDidMount() {
+	}
+	componentDidMount() {
 
 		this.loadToDoItemsFromDatabase();
 	}
+
+	// --- Entity operations ---
+
 	updateToDo = (todo) => {
 
 		ComponentUtil.setIsLoading(this, true);
@@ -50,11 +58,10 @@ class TodoItems extends React.PureComponent {
 				ComponentUtil.setIsLoading(this, false);
 			});
 	}
-	// https://firebase.google.com/docs/firestore/manage-data/add-data
 	addToDo = (todo) => {
 		
 		ComponentUtil.setIsLoading(this, true);
-		firestoreManager.addRecord(TODO_ITEMS_COLLECTION_NAME, todo)
+		return firestoreManager.addRecord(TODO_ITEMS_COLLECTION_NAME, todo)
 			.then(() => {
 				this.loadToDoItemsFromDatabase();
 			}).catch((error) => {
@@ -64,7 +71,6 @@ class TodoItems extends React.PureComponent {
 				ComponentUtil.setIsLoading(this, false);
 			});
 	}
-	// https://firebase.google.com/docs/firestore/manage-data/delete-data
 	deleteToDo = (id) => {
 
 		ComponentUtil.setIsLoading(this, true);
@@ -87,14 +93,9 @@ class TodoItems extends React.PureComponent {
 			ComponentUtil.setIsLoading(this, false);
 		});
 	}
-    handleSubmit = () => {
 
-		var description = this.state.editText.trim();
-		if(description) {
-			this.addToDo({ description, isCompleted: false, createdAt: firestoreManager.now() });
-            this.setState({editText: ''}); // Also trigger a refresh
-		}
-	}
+	// --- Jsx Generation ---
+
     getAddButtonAlertJsx = (isLoading, render = true) => {
 
 		if(!render) return null;
@@ -113,16 +114,8 @@ class TodoItems extends React.PureComponent {
 				  checked={this.state.showDate} onChange={this.onShowDateCheckboxClick} 
 				/> Show Date
 		</div>;
-    }
-    onShowDateCheckboxClick = (e) => {
-
-		ComponentUtil.forceRefresh(this, { showDate: e.target.checked });
 	}
-    handleChange = (event) => {
-
-		this.setState({ editText: event.target.value });
-	}
-    renderToDoItemToJsx = (todoItem) => {
+	renderToDoItemToJsx = (todoItem) => {
 
 		return <TodoItem 
 			id={todoItem.id} 
@@ -141,9 +134,40 @@ class TodoItems extends React.PureComponent {
 			return this.renderToDoItemToJsx(todoItem);
 		});
 	}    
-    render() {
 
-		// tracer.log(`render() timeStamp:${this.state.timeStamp}`, this);
+	// --- Misc Events ---
+
+    onShowDateCheckboxClick = (e) => {
+
+		ComponentUtil.forceRefresh(this, { showDate: e.target.checked });
+	}
+	clearDescriptionToDoTextBox() {
+
+		ComponentUtil.forceRefresh(this, { editText : '' });
+	}
+    handleChange = (event) => {
+
+		ComponentUtil.forceRefresh(this, { editText : event.target.value });
+	}
+	handleSubmit = () => {
+
+		var description = this.state.editText.trim();
+		if(description) {
+			this.addToDo(ToDo.create(description)).then(() => {
+				this.clearDescriptionToDoTextBox();
+			});
+		}
+	}
+	handleKeyDown = (event) => {
+
+		if (event.which === ESCAPE_KEY) {
+			this.clearDescriptionToDoTextBox();
+		}
+		else if (event.which === ENTER_KEY) 
+			this.handleSubmit(event);
+	}
+	render() {
+
 		return (
 			<section>
 				<div className="input-group" style={{marginBottom:'5px'}}>

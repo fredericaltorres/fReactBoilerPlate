@@ -1,5 +1,8 @@
 import React from "react";
 
+export const ESCAPE_KEY = 27;
+export const ENTER_KEY  = 13;
+
 class ComponentUtil  {
 
 	static forceRefresh (reactComponent, otherState) {
@@ -17,6 +20,7 @@ class ComponentUtil  {
 
 		ComponentUtil.forceRefresh(reactComponent, { isLoading: state });
 	}
+
 }
 
 export default ComponentUtil;
