@@ -4,11 +4,17 @@ import FirestoreManagerConfig from './FirestoreManagerConfig';
 
 const DEFAULT_MAX_RECORD = 128;
 
+const getSettings = () => {
+	return { timestampsInSnapshots: true };
+}
+
 class FirestoreManager {
 
 	static _initialized = false;
 	
 	constructor() {
+
+		this._settings = getSettings();
 
 		if(!FirestoreManager._initialized) {            
 			
@@ -39,6 +45,7 @@ class FirestoreManager {
 		});		
 	}
 	getCurrentUser() {
+
 		return firebase.auth().currentUser;
 	}
 	// https://firebase.google.com/docs/auth/web/manage-users?authuser=0
@@ -55,11 +62,13 @@ class FirestoreManager {
 	}
 	getFirestoreDB() {
 
-		const app = firebase.app();
+		if(this._firestoreDb) 
+			return this._firestoreDb;
+
 		const firestore = firebase.firestore();
-		const settings = { timestampsInSnapshots: true };
-		firestore.settings(settings);
-		return firestore;
+		firestore.settings(this._settings);
+		this._firestoreDb = firestore;
+		return this._firestoreDb;
 	}
 	getStorageRef() {
 
@@ -67,16 +76,26 @@ class FirestoreManager {
 	}
 	getCollection(name) {
 
-		return new FirestoreManager().getFirestoreDB().collection(name);
+		return this.getFirestoreDB().collection(name);
 	}
 	showErrorToUser(msg) {
+
 		Tracer.error(msg, this);
 		alert(`ERROR: ${msg}`);
 	}
 	__rebuildDocument(doc) {
+
 		const data = doc.data();
 		data.id = doc._key.toString();
 		return data;
+	}
+	__rebuildDocuments(documents) {
+
+		const records = [];
+		documents.forEach((doc) => { 
+			records.push(this.__rebuildDocument(doc)); 
+		});
+		return records;
 	}
 	// https://firebase.google.com/docs/database/web/lists-of-data
 	// https://firebase.google.com/docs/firestore/query-data/listen
@@ -88,10 +107,7 @@ class FirestoreManager {
 		.orderBy(orderByColumn, orderDirection)
 		.limit(maxRecord)
 		.onSnapshot((querySnapshot) => {
-			var records = [];
-			querySnapshot.forEach((doc) => { 
-				records.push(this.__rebuildDocument(doc)); 
-			});
+			const records = this.__rebuildDocuments(querySnapshot)
 			try {
 				if(callBack) callBack(records);
 			}
@@ -110,11 +126,7 @@ class FirestoreManager {
 			const query = dbToDoItems.orderBy(orderByColumn, orderDirection).limit(maxRecord);
 			query.get().then(todoItems => {
 
-				let items = [];
-				todoItems.forEach(doc => {
-
-					items.push(this.__rebuildDocument(doc));
-				});
+				const items = this.__rebuildDocuments(todoItems)
 				Tracer.log(`loadDataFromCollection(${items.length} records loaded)`, this);
 				resolve(items);
 			});
@@ -138,12 +150,14 @@ class FirestoreManager {
 				p = docRef.update(data);
 
 			p.then(() => {
+
 					Tracer.log(`updateRecord ${idFieldName}:${longId} succeeded`, this);
 					resolve(longId);
-				}).catch((error) => {
-					this.showErrorToUser(`updateRecord ${idFieldName}:${longId} failed ${error}`);
-					reject(error);
-				});
+			}).catch((error) => {
+
+				this.showErrorToUser(`updateRecord ${idFieldName}:${longId} failed ${error}`);
+				reject(error);
+			});
 		});
 	}
 	// https://firebase.google.com/docs/firestore/manage-data/delete-data
@@ -156,9 +170,12 @@ class FirestoreManager {
 			const docRef = this.getCollection(collection).doc(id);
 			docRef.delete()
 				.then(() => {
+
 					Tracer.log(`deleteRecord  id:${id} succeeded`, this);
 					resolve(id);
-				}).catch((error) => {
+				})
+				.catch((error) => {
+
 					this.showErrorToUser(`deleteRecord  id:${id} failed ${error}`);
 					reject(error);
 				});
@@ -173,9 +190,12 @@ class FirestoreManager {
 			const id = this.getNewUniqueId();
 			this.getCollection(collection).doc(id).set(data)
 				.then(() => {
+
 					Tracer.log(`addRecord ${idFieldName}:${id} succeeded`, this);
 					resolve({ ...data, [idFieldName]:`${collection}/${id}` });
-				}).catch((error) => {
+				})
+				.catch((error) => {
+
 					this.showErrorToUser(`addRecord ${idFieldName}:${id} failed ${error}`);
 					reject(error);
 				});

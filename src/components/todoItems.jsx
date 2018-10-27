@@ -161,16 +161,15 @@ class TodoItems extends React.PureComponent {
 
 		ComponentUtil.forceRefresh(this, { editText : '' });
 	}
-    handleChange = (event) => {
+	handleChange = (event) => {
 
 		ComponentUtil.forceRefresh(this, { editText : event.target.value });
 	}
 	handleSubmit = () => {
 
 		var description = this.state.editText.trim();
-		if(description) {
+		if(description)
 			this.addToDo(ToDo.create(description));
-		}
 	}
 	handleKeyDown = (event) => {
 
