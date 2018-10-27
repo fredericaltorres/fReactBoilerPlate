@@ -6,7 +6,6 @@ import firestoreManager from '../common/FirestoreManager';
 import ComponentUtil from '../common/ComponentUtil';
 import { ESCAPE_KEY, ENTER_KEY } from '../common/ComponentUtil';
 
-
 const TODO_ITEMS_COLLECTION_NAME = 'todoItems';
 
 class ToDo {
@@ -31,6 +30,7 @@ class TodoItems extends React.PureComponent {
 			// { createdAt:"2018-10-09T19:41:59.272621Z", description:'Description 1', isCompleted: false, id:'1' },
 			// { createdAt:"2018-10-09T19:41:59.272621Z", description:'Description 2', isCompleted: false, id:'2' }
 		],
+		userNotifications:[],
 	};
 	constructor(props) {
 
@@ -41,6 +41,13 @@ class TodoItems extends React.PureComponent {
 	componentDidMount() {
 
 		this.loadToDoItemsFromDatabase();
+		firestoreManager.monitorQuery(
+			'userNotifications', 
+			(records) => {
+				ComponentUtil.forceRefresh(this, { userNotifications : records } );
+			}, 
+			'timestamp'
+		);
 	}
 	googleLogin() {
 		firestoreManager.googleLogin();
@@ -48,52 +55,49 @@ class TodoItems extends React.PureComponent {
 	// --- Entity operations ---
 
 	updateToDo = (todo) => {
-
-		ComponentUtil.setIsLoading(this, true);
-		firestoreManager.updateRecord(TODO_ITEMS_COLLECTION_NAME, todo)
-			.then(() => {
-				this.loadToDoItemsFromDatabase();
-			}).catch((error) => {
-				tracer.error(error);
-			})
-			.then(() => {
-				ComponentUtil.setIsLoading(this, false);
-			});
+	
+		ComponentUtil.executeAsBusy(this,
+			() => {
+				return firestoreManager.updateRecord(TODO_ITEMS_COLLECTION_NAME, todo)
+						.then(() => {
+							this.loadToDoItemsFromDatabase();
+						});
+			}
+		);				
 	}
 	addToDo = (todo) => {
 		
-		ComponentUtil.setIsLoading(this, true);
-		return firestoreManager.addRecord(TODO_ITEMS_COLLECTION_NAME, todo)
-			.then(() => {
-				this.loadToDoItemsFromDatabase();
-			}).catch((error) => {
-				tracer.error(error);
-			})
-			.then(() => {
-				ComponentUtil.setIsLoading(this, false);
-			});
+		ComponentUtil.executeAsBusy(this,
+			() => {
+				return firestoreManager.addRecord(TODO_ITEMS_COLLECTION_NAME, todo)
+						.then(() => {
+							this.loadToDoItemsFromDatabase();
+							this.clearDescriptionToDoTextBox();
+						})
+			}
+		);			
 	}
 	deleteToDo = (id) => {
 
-		ComponentUtil.setIsLoading(this, true);
-		firestoreManager.deleteRecord(TODO_ITEMS_COLLECTION_NAME, id)
-			.then(() => {
-				this.loadToDoItemsFromDatabase();
-			}).catch((error) => {
-				tracer.error(error);
-			})
-			.then(() => {
-				ComponentUtil.setIsLoading(this, false);
-			});
+		ComponentUtil.executeAsBusy(this,
+			() => {
+				return firestoreManager.deleteRecord(TODO_ITEMS_COLLECTION_NAME, id)
+						.then(() => {
+							this.loadToDoItemsFromDatabase();
+						})
+			}
+		);
 	}
 	loadToDoItemsFromDatabase = () => {
 
-		ComponentUtil.setIsLoading(this, true);
-		firestoreManager.loadDataFromTable(TODO_ITEMS_COLLECTION_NAME, 'createdAt').then((items) => {			
-			
-			ComponentUtil.forceRefresh(this, { todoItems: items} );
-			ComponentUtil.setIsLoading(this, false);
-		});
+		ComponentUtil.executeAsBusy(this,
+			() => {
+				return firestoreManager.loadDataFromCollection(TODO_ITEMS_COLLECTION_NAME, 'createdAt')
+					.then((items) => {
+						ComponentUtil.forceRefresh(this, { todoItems: items} );
+					});
+			}
+		);
 	}
 
 	// --- Jsx Generation ---
@@ -141,6 +145,15 @@ class TodoItems extends React.PureComponent {
 			return this.renderToDoItemToJsx(todoItem);
 		});
 	}    
+	renderUserNotification = () => {
+
+		if(this.state.userNotifications.length === 0) {
+			return <span>No notifications</span>;
+		}
+		return this.state.userNotifications.map((userNotification) => {
+			return <li key={userNotification.id}>{userNotification.message}</li>;
+		});
+	}
 
 	// --- Misc Events ---
 
@@ -160,9 +173,7 @@ class TodoItems extends React.PureComponent {
 
 		var description = this.state.editText.trim();
 		if(description) {
-			this.addToDo(ToDo.create(description)).then(() => {
-				this.clearDescriptionToDoTextBox();
-			});
+			this.addToDo(ToDo.create(description));
 		}
 	}
 	handleKeyDown = (event) => {
@@ -195,6 +206,13 @@ class TodoItems extends React.PureComponent {
 				<ul className="list-group" style={{marginTop:'5px'}}>
 					{this.renderToDoItemsToJsx(this.state.todoItems)}
                 </ul>
+
+				<hr/>
+					<ul>
+						{this.renderUserNotification()}
+					</ul>
+				<hr/>
+
 				<small>
                 timeStamp: {this.state.timeStamp} <br/>
 				Logged on user: {firestoreManager.getCurrentUser() ? firestoreManager.getCurrentUser().displayName: 'None'}

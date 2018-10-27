@@ -30,7 +30,7 @@ class TodoItem extends React.PureComponent {
 		this.props.updateToDo(todo);
 	}	
 	getDay (createdTime) {
-
+		
 		return firestoreManager.formatTimestamp(createdTime)
 	}
 	getCreatedTimeJsx() {
