@@ -1,24 +1,9 @@
 import Tracer from './Tracer';
 import moment from "moment"; // http://momentjs.com/
 import { runInNewContext } from 'vm';
+import FirestoreManagerConfig from './FirestoreManagerConfig';
 
-const firestoreManagerConfig = {
-
-	// https://console.developers.google.com/apis/credentials? 
-	// https://console.developers.google.com/apis/credentials?pli=1&project=api-project-272201949745&folder&organizationId
-
-	apiKey: "AIzaSyDZwgZ8wGSbfstXLuvr9iROHTL5YUVzJ34",
-
-	// apiKey: "AIzaSyB3BLrGo3Y0qlMDJqvuP9JqYIHeDG5Ty-w",	
-
-	legacyServerKey : "AIzaSyBW4rDtW7IKIIQWF31ak8bRgfrUyWwRZbU",	
-
-	authDomain: "fredtodo-f553b.firebaseapp.com",
-	databaseURL: "https://fredtodo-f553b.firebaseio.com",
-	projectId: "fredtodo-f553b",
-	storageBucket: "fredtodo-f553b.appspot.com",
-	messagingSenderId: "308390253585"
-};
+const DEFAULT_MAX_RECORD = 128;
 
 class FirestoreManager {
 
@@ -30,11 +15,10 @@ class FirestoreManager {
 			
 			this.name = 'FirestoreManager';
 			Tracer.log(`FirestoreManager init`, this);
-			firebase.initializeApp(firestoreManagerConfig);
+			firebase.initializeApp(FirestoreManagerConfig);
 			FirestoreManager._initialized = true;
 			this.__setUpOnAuthStateChanged();
 		}
-		// Tracer.log(`FirestoreManager currentUser:${firebase.auth().currentUser} ==========`, this);
 	}
 	__setUpOnAuthStateChanged () {
 
@@ -54,23 +38,6 @@ class FirestoreManager {
 				console.log('No user change');
 			}
 		});		
-
-		// Tracer.log('~~~~~~~~~~~~~~~~~~~~~~~~~~');
-		// this.commentsRef = firebase.database().ref('userNotifications');
-		// this.commentsRef.on('child_added', function(data) {
-		// 	alert(`new child ${JSON.stringify(data)}`);
-		// });
-
-		// https://firebase.google.com/docs/database/web/lists-of-data
-		// https://firebase.google.com/docs/firestore/query-data/listen
-		// this.getCollection('userNotifications').onSnapshot((querySnapshot) => {
-		// 	var records = [];
-		// 	querySnapshot.forEach((doc) => {
-		// 		records.push(doc.data());
-		// 	});
-		// 	alert(JSON.stringify(records));
-		// });
-		// Tracer.log(' == ~~~~~~~~~~~~~~~~~~~~~~~~~~ ==');
 	}
 	getCurrentUser() {
 		return firebase.auth().currentUser;
@@ -114,7 +81,7 @@ class FirestoreManager {
 	}
 	// https://firebase.google.com/docs/database/web/lists-of-data
 	// https://firebase.google.com/docs/firestore/query-data/listen
-	monitorQuery(collection, callBack, orderByColumn = null, orderDirection = 'desc', maxRecord = 100) {
+	monitorQuery(collection, callBack, orderByColumn = null, orderDirection = 'desc', maxRecord = DEFAULT_MAX_RECORD) {
 		
 		Tracer.log(`monitorQuery ${collection}`, this);
 
@@ -134,7 +101,7 @@ class FirestoreManager {
 			}
 		});
 	}
-	loadDataFromCollection(collection, orderByColumn = null, orderDirection = 'desc', maxRecord = 100) {
+	loadDataFromCollection(collection, orderByColumn = null, orderDirection = 'desc', maxRecord = DEFAULT_MAX_RECORD) {
 
 		Tracer.log(`loadDataFromCollection(${collection}, ${orderByColumn}, ${orderDirection}, ${maxRecord})`, this);
 

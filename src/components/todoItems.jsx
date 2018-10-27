@@ -40,7 +40,6 @@ class TodoItems extends React.PureComponent {
 	}
 	componentDidMount() {
 
-		this.loadToDoItemsFromDatabase();
 		firestoreManager.monitorQuery(
 			'userNotifications', 
 			(records) => {
@@ -48,7 +47,25 @@ class TodoItems extends React.PureComponent {
 			}, 
 			'timestamp'
 		);
+		firestoreManager.monitorQuery(
+			TODO_ITEMS_COLLECTION_NAME, 
+			(records) => {
+				ComponentUtil.forceRefresh(this, { todoItems: records} );
+			}, 
+			'createdAt'
+		);
 	}
+	// ___loadToDoItemsFromDatabase = () => {
+
+	// 	ComponentUtil.executeAsBusy(this,
+	// 		() => {
+	// 			return firestoreManager.loadDataFromCollection(TODO_ITEMS_COLLECTION_NAME, 'createdAt')
+	// 				.then((items) => {
+	// 					ComponentUtil.forceRefresh(this, { todoItems: items} );
+	// 				});
+	// 		}
+	// 	);
+	// }
 	googleLogin() {
 		firestoreManager.googleLogin();
 	}
@@ -57,12 +74,7 @@ class TodoItems extends React.PureComponent {
 	updateToDo = (todo) => {
 	
 		ComponentUtil.executeAsBusy(this,
-			() => {
-				return firestoreManager.updateRecord(TODO_ITEMS_COLLECTION_NAME, todo)
-						.then(() => {
-							this.loadToDoItemsFromDatabase();
-						});
-			}
+			() => { return firestoreManager.updateRecord(TODO_ITEMS_COLLECTION_NAME, todo); }
 		);				
 	}
 	addToDo = (todo) => {
@@ -71,7 +83,6 @@ class TodoItems extends React.PureComponent {
 			() => {
 				return firestoreManager.addRecord(TODO_ITEMS_COLLECTION_NAME, todo)
 						.then(() => {
-							this.loadToDoItemsFromDatabase();
 							this.clearDescriptionToDoTextBox();
 						})
 			}
@@ -80,26 +91,10 @@ class TodoItems extends React.PureComponent {
 	deleteToDo = (id) => {
 
 		ComponentUtil.executeAsBusy(this,
-			() => {
-				return firestoreManager.deleteRecord(TODO_ITEMS_COLLECTION_NAME, id)
-						.then(() => {
-							this.loadToDoItemsFromDatabase();
-						})
-			}
+			() => { return firestoreManager.deleteRecord(TODO_ITEMS_COLLECTION_NAME, id); }
 		);
 	}
-	loadToDoItemsFromDatabase = () => {
-
-		ComponentUtil.executeAsBusy(this,
-			() => {
-				return firestoreManager.loadDataFromCollection(TODO_ITEMS_COLLECTION_NAME, 'createdAt')
-					.then((items) => {
-						ComponentUtil.forceRefresh(this, { todoItems: items} );
-					});
-			}
-		);
-	}
-
+	
 	// --- Jsx Generation ---
 
     getAddButtonAlertJsx = (isLoading, render = true) => {
