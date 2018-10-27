@@ -218,7 +218,7 @@ class FirestoreManager {
 	// https://firebase.google.com/docs/reference/js/firebase.firestore.Timestamp
 	formatTimestamp(timestamp, format = 'YYYY/MM/DD h:mm:ss a') {
 
-		const m = moment(timestamp);
+		const m = moment(timestamp.toDate());
 		const s = m.format(format);
 		return s;
 	}

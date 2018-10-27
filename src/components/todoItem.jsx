@@ -6,8 +6,10 @@ import firestoreManager from "../common/FirestoreManager";
 const isMobile = false;
 
 class TodoItem extends React.PureComponent {
+
 	static propTypes = {		
-		description : PropTypes.string,
+
+		description 	: PropTypes.string,
 		id 				: PropTypes.string.isRequired,
 		isCompleted 	: PropTypes.bool.isRequired,
 		createdAt 		: PropTypes.object.isRequired,
@@ -20,6 +22,7 @@ class TodoItem extends React.PureComponent {
 		this.props.deleteToDo(this.props.id);
 	}
 	onCheckClick = (e) => {
+
 		const checked = e.target.checked;	
 		const todo = {
 			id : this.props.id,
@@ -30,7 +33,7 @@ class TodoItem extends React.PureComponent {
 		this.props.updateToDo(todo);
 	}	
 	getDay (createdTime) {
-		
+
 		return firestoreManager.formatTimestamp(createdTime)
 	}
 	getCreatedTimeJsx() {
@@ -52,7 +55,7 @@ class TodoItem extends React.PureComponent {
 		else return null;
 	}
 	render() {
-		// tracer.log(`render todo:${JSON.stringify(this.props)}`);
+
 		return (
 			<li key={this.props.id} id={this.props.id} className="list-group-item">
 				<input 

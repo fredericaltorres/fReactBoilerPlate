@@ -66,7 +66,7 @@ class TodoItems extends React.PureComponent {
 		);				
 	}
 	addToDo = (todo) => {
-		
+
 		ComponentUtil.executeAsBusy(this,
 			() => {
 				return firestoreManager.addRecord(TODO_ITEMS_COLLECTION_NAME, todo)
@@ -184,8 +184,6 @@ class TodoItems extends React.PureComponent {
 		else if (event.which === ENTER_KEY) 
 			this.handleSubmit(event);
 	}
-
-	
 	render() {
 
 		return (
