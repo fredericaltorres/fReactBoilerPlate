@@ -1,6 +1,5 @@
 import Tracer from './Tracer';
 import moment from "moment"; // http://momentjs.com/
-import { runInNewContext } from 'vm';
 import FirestoreManagerConfig from './FirestoreManagerConfig';
 
 const DEFAULT_MAX_RECORD = 128;

@@ -7,6 +7,7 @@ import ComponentUtil from '../common/ComponentUtil';
 import { ESCAPE_KEY, ENTER_KEY } from '../common/ComponentUtil';
 
 const TODO_ITEMS_COLLECTION_NAME = 'todoItems';
+const USER_NOTIFICATION_COLLECTION_NAME = 'userNotifications'; 
 
 class ToDo {
 	static create(description) {
@@ -41,7 +42,7 @@ class TodoItems extends React.PureComponent {
 	componentDidMount() {
 
 		firestoreManager.monitorQuery(
-			'userNotifications', 
+			USER_NOTIFICATION_COLLECTION_NAME, 
 			(records) => {
 				ComponentUtil.forceRefresh(this, { userNotifications : records } );
 			}, 
@@ -97,7 +98,7 @@ class TodoItems extends React.PureComponent {
 	
 	// --- Jsx Generation ---
 
-    getAddButtonAlertJsx = (isLoading, render = true) => {
+	getAddButtonAlertJsx = (isLoading, render = true) => {
 
 		if(!render) return null;
 
@@ -105,14 +106,14 @@ class TodoItems extends React.PureComponent {
 		let className = isLoading ? "btn btn-outline-warning" : "btn btn-outline-primary";
 
 		return <div>
-            <button disabled={this.props.isLoading} type="button" className="btn btn-primary" 
-            		onClick = {this.handleSubmit}>Add
+			<button disabled={this.props.isLoading} type="button" className="btn btn-primary" 
+					onClick = {this.handleSubmit}>Add
 			</button> 
 			&nbsp;
 			<button type="button" className={className}>{message}</button>			
 
 			<button disabled={this.props.isLoading} type="button" className="btn btn-primary" 
-            		onClick = {this.googleLogin}>Login
+				onClick = {this.googleLogin}>Login
 			</button> 
 
 			&nbsp;&nbsp;			
@@ -198,7 +199,7 @@ class TodoItems extends React.PureComponent {
 				
 				<ul className="list-group" style={{marginTop:'5px'}}>
 					{this.renderToDoItemsToJsx(this.state.todoItems)}
-                </ul>
+				</ul>
 
 				<hr/>
 					<ul>
@@ -207,7 +208,7 @@ class TodoItems extends React.PureComponent {
 				<hr/>
 
 				<small>
-                timeStamp: {this.state.timeStamp} <br/>
+				timeStamp: {this.state.timeStamp} <br/>
 				Logged on user: {firestoreManager.getCurrentUser() ? firestoreManager.getCurrentUser().displayName: 'None'}
 				</small>
 			</section>
