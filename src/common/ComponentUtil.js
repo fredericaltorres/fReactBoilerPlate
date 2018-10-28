@@ -27,7 +27,7 @@ class ComponentUtil  {
 			TypeUtil.throwInvalidParameterType('func', 'function');
 
 		ComponentUtil.setIsLoading(reactComponent, true);
-		func().then(() => {
+		return func().then(() => {
 			ComponentUtil.setIsLoading(reactComponent, false);
 		});
 	}

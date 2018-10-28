@@ -13,9 +13,9 @@
   "license": "ISC",
   "jest": {
     "moduleFileExtensions": [
-      "js",
-      "jsx"
+      "js", "jsx"
     ],
+    "testMatch": ["**/?(*.)spec.js?(x)"],
     "moduleDirectories": [
       "node_modules"
     ],
