@@ -8,14 +8,14 @@ const App = () => (
               <div>
                   <h1>ToDo App with Firebase</h1>
               </div>
-              <ul className="left">
+              {/* <ul className="left">
                   <li>
                       <Link to="/">Home</Link>
                   </li>
                   <li>
                       <Link to="/about">About</Link>
                   </li>
-              </ul>
+              </ul> */}
               <Routes />
           </main>
     </BrowserRouter>

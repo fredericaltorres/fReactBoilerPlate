@@ -2,7 +2,7 @@ import Tracer from './Tracer';
 import moment from "moment"; // http://momentjs.com/
 import FirestoreManagerConfig from './FirestoreManagerConfig';
 
-const DEFAULT_MAX_RECORD = 128;
+export const DEFAULT_MAX_RECORD = 400;
 
 const getSettings = () => {
 	return { timestampsInSnapshots: true };
@@ -11,18 +11,23 @@ const getSettings = () => {
 class FirestoreManager {
 
 	static _initialized = false;
+	static _monitoredSnapshot = {
+
+	};
 	
 	constructor() {
 
 		this._settings = getSettings();
+		this.batchModeOn = false;
 
-		if(!FirestoreManager._initialized) {            
+		if(!FirestoreManager._initialized) {
 			
 			this.name = 'FirestoreManager';
 			Tracer.log(`FirestoreManager init`, this);
 			firebase.initializeApp(FirestoreManagerConfig);
 			FirestoreManager._initialized = true;
 			this.__setUpOnAuthStateChanged();
+			
 		}
 	}
 	__setUpOnAuthStateChanged () {
@@ -78,6 +83,16 @@ class FirestoreManager {
 
 		return this.getFirestoreDB().collection(name);
 	}
+	startBatch() {
+		Tracer.log(`startBatch`, this);
+		this.batchModeOn = true;
+		return this.getFirestoreDB().batch();
+	}
+	commitBatch(batch) {
+		Tracer.log(`commitBatch`, this);
+		this.batchModeOn = false;
+		return batch.commit();
+	}
 	showErrorToUser(msg) {
 
 		Tracer.error(msg, this);
@@ -97,13 +112,26 @@ class FirestoreManager {
 		});
 		return records;
 	}
+	__unsubscribeMonitoredSnapshot(unsubscribe) {
+		unsubscribe();
+	}
+	stopMonitorQuery(collection) {
+		
+		if(FirestoreManager._monitoredSnapshot[collection]) {
+			Tracer.log(`Unsubscribe monitored snapshot:${collection}`);
+			this.__unsubscribeMonitoredSnapshot(FirestoreManager._monitoredSnapshot[collection]);
+			delete FirestoreManager._monitoredSnapshot[collection];
+		}
+	} 
 	// https://firebase.google.com/docs/database/web/lists-of-data
 	// https://firebase.google.com/docs/firestore/query-data/listen
 	monitorQuery(collection, callBack, orderByColumn = null, orderDirection = 'desc', maxRecord = DEFAULT_MAX_RECORD) {
 		
-		Tracer.log(`monitorQuery ${collection}`, this);
+		Tracer.log(`monitorQuery ${collection}, orderByColumn:${orderByColumn}/${orderDirection}, maxRecord:${maxRecord}`, this);
+		this.stopMonitorQuery(collection);
 
-		this.getCollection(collection)
+		// Return a function handler that can unsubscribe the snapshot 
+		FirestoreManager._monitoredSnapshot[collection] = this.getCollection(collection)
 		.orderBy(orderByColumn, orderDirection)
 		.limit(maxRecord)
 		.onSnapshot((querySnapshot) => {
@@ -115,6 +143,7 @@ class FirestoreManager {
 				Tracer.error(`monitorQuery ${collection} failed calling callback`);
 			}
 		});
+		return true;
 	}
 	loadDataFromCollection(collection, orderByColumn = null, orderDirection = 'desc', maxRecord = DEFAULT_MAX_RECORD) {
 
@@ -133,9 +162,13 @@ class FirestoreManager {
 		});
 	}
 	// https://firebase.google.com/docs/database/web/read-and-write
-	updateRecord(collection, data, idFieldName = "id", overWriteDoc = true) {
+	updateRecord(collection, oData, idFieldName = "id", overWriteDoc = true) {
 
 		return new Promise((resolve, reject) => {
+
+			// Duplicate the object for now, trying to removed and add the
+			// id property created some problem
+			const data = Object.assign({}, oData);
 
 			Tracer.log(`updateRecord data:${JSON.stringify(data)}`, this);
 			const longId = data[idFieldName];
@@ -153,6 +186,7 @@ class FirestoreManager {
 
 					Tracer.log(`updateRecord ${idFieldName}:${longId} succeeded`, this);
 					resolve(longId);
+
 			}).catch((error) => {
 
 				this.showErrorToUser(`updateRecord ${idFieldName}:${longId} failed ${error}`);
@@ -163,43 +197,62 @@ class FirestoreManager {
 	// https://firebase.google.com/docs/firestore/manage-data/delete-data
 	deleteRecord(collection, id) {
 
-		return new Promise((resolve, reject) => {
-
-			Tracer.log(`deleteRecord id:${id}`, this);
+		if(this.batchModeOn) {
+			Tracer.log(`deleteRecord batch id:${id}`, this);
 			id = this.extractId(id);
 			const docRef = this.getCollection(collection).doc(id);
-			docRef.delete()
-				.then(() => {
+			docRef.delete();
+		}
+		else {
 
-					Tracer.log(`deleteRecord  id:${id} succeeded`, this);
-					resolve(id);
-				})
-				.catch((error) => {
+			return new Promise((resolve, reject) => {
 
-					this.showErrorToUser(`deleteRecord  id:${id} failed ${error}`);
-					reject(error);
-				});
-		});
+				Tracer.log(`deleteRecord id:${id}`, this);
+				id = this.extractId(id);
+				const docRef = this.getCollection(collection).doc(id);
+				docRef.delete()
+					.then(() => {
+	
+						Tracer.log(`deleteRecord  id:${id} succeeded`, this);
+						resolve(id);
+					})
+					.catch((error) => {
+	
+						this.showErrorToUser(`deleteRecord  id:${id} failed ${error}`);
+						reject(error);
+					});
+			});			
+		}
 	}
 	// https://firebase.google.com/docs/firestore/manage-data/add-data
+	// https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes
 	addRecord(collection, data, idFieldName = "id") {
 
-		return new Promise((resolve, reject) => {
+		if(this.batchModeOn) {
 
-			Tracer.log(`addRecord data:${JSON.stringify(data)}`, this);
+			// Tracer.log(`addRecord batch`, this);
 			const id = this.getNewUniqueId();
-			this.getCollection(collection).doc(id).set(data)
-				.then(() => {
+			this.getCollection(collection).doc(id).set(data);
+		}
+		else {
 
-					Tracer.log(`addRecord ${idFieldName}:${id} succeeded`, this);
-					resolve({ ...data, [idFieldName]:`${collection}/${id}` });
-				})
-				.catch((error) => {
+			return new Promise((resolve, reject) => {
 
-					this.showErrorToUser(`addRecord ${idFieldName}:${id} failed ${error}`);
-					reject(error);
-				});
-		});
+				Tracer.log(`addRecord data:${JSON.stringify(data)}`, this);
+				const id = this.getNewUniqueId();
+				this.getCollection(collection).doc(id).set(data)
+					.then(() => {
+
+						Tracer.log(`addRecord ${idFieldName}:${id} succeeded`, this);
+						resolve({ ...data, [idFieldName]:`${collection}/${id}` });
+					})
+					.catch((error) => {
+
+						this.showErrorToUser(`addRecord ${idFieldName}:${id} failed ${error}`);
+						reject(error);
+					});
+			});
+		}
 	};
 	// https://firebase.google.com/docs/reference/js/firebase.firestore.Timestamp
 	formatTimestamp(timestamp, format = 'YYYY/MM/DD h:mm:ss a') {
@@ -224,6 +277,9 @@ class FirestoreManager {
 		
 		return Math.random().toString(16).substr(2, 16);
 	}	
+	invertOrderDirection(d) {
+		return d === 'desc' ? 'asc' : 'desc';
+	}
 }  
 
 export default new FirestoreManager();

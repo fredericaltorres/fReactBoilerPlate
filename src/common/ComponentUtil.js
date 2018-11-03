@@ -18,19 +18,57 @@ class ComponentUtil  {
 			reactComponent.setState(newState);
 	}
 	static setIsLoading(reactComponent, state) {
-
+		console.log(`setIsLoading : ${state}`);
 		ComponentUtil.forceRefresh(reactComponent, { isLoading: state });
 	}
+	// static executeAsBusy__(reactComponent, func) {
+		
+	// 	if(!TypeUtil.isFunction(func))
+	// 		TypeUtil.throwInvalidParameterType('func', 'function');
+
+	// 	const isAlreadyLoading = reactComponent.state.isLoading;
+
+	// 	if(!isAlreadyLoading)
+	// 		ComponentUtil.setIsLoading(reactComponent, true);
+
+	// 	const r = func();
+	// 	if(r && r.then) { // If it is a Promise
+	// 		return r.then(() => {
+	// 			if(!isAlreadyLoading)
+	// 				ComponentUtil.setIsLoading(reactComponent, false);
+	// 		});
+	// 	}
+	// 	else {
+	// 		if(!isAlreadyLoading)
+	// 			ComponentUtil.setIsLoading(reactComponent, false);
+	// 	}
+	// }
 	static executeAsBusy(reactComponent, func) {
 		
 		if(!TypeUtil.isFunction(func))
 			TypeUtil.throwInvalidParameterType('func', 'function');
 
+		const isAlreadyLoading = reactComponent.state.isLoading;
 		ComponentUtil.setIsLoading(reactComponent, true);
-		return func().then(() => {
-			ComponentUtil.setIsLoading(reactComponent, false);
+
+		return new Promise((resolve, reject) => {
+
+			setTimeout(() => {
+
+				const r = func();
+				if(r && r.then) { // If it is a Promise
+					return r.then(() => {
+						ComponentUtil.setIsLoading(reactComponent, false);
+						resolve();
+					});
+				} 
+				else {
+					ComponentUtil.setIsLoading(reactComponent, false);
+				}
+				resolve();
+			}, 100);
 		});
-	}
+	}	
 }
 
 export default ComponentUtil;
