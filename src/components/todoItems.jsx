@@ -4,16 +4,18 @@ import tracer from '../common/Tracer';
 
 import TodoItem from './todoItem';
 import Button from './Button';
+import Checkbox from './Checkbox';
 
 import firestoreManager from '../common/FirestoreManager';
-import {DEFAULT_MAX_RECORD} from '../common/FirestoreManager';
 
 import ComponentUtil from '../common/ComponentUtil';
+
 import ToDo from './todo';
+import { TODO_ITEMS_COLLECTION_NAME } from './todo';
+
 import { ESCAPE_KEY, ENTER_KEY } from '../common/ComponentUtil';
 import Tracer from "../common/Tracer";
 
-const TODO_ITEMS_COLLECTION_NAME = 'todoItems';
 const USER_NOTIFICATION_COLLECTION_NAME = 'userNotifications'; 
 
 class TodoItems extends React.PureComponent {
@@ -41,16 +43,18 @@ class TodoItems extends React.PureComponent {
 		this.name = "TodoItems";
 		tracer.log('constructor', this);
 	}
-	monitorToDoItemCollection() {
+	monitorToDoItemsCollection() {
 
 		firestoreManager.monitorQuery(
 			TODO_ITEMS_COLLECTION_NAME,
 			(records) => { 
-				ComponentUtil.forceRefresh(this, { todoItems: records, isLoading: false } ); }, 
+				Tracer.log(`collection ${TODO_ITEMS_COLLECTION_NAME} change detected`);
+				ComponentUtil.forceRefresh(this, { todoItems: records, isLoading: false } ); 
+			}, 
 			'createdAt', this.state.todoOrderDirection
-		);			
+		);
 	}
-	stopMonitorToDoItemCollection() {
+	stopMonitorToDoItemsCollection() {
 
 		firestoreManager.stopMonitorQuery(TODO_ITEMS_COLLECTION_NAME);
 	}
@@ -61,7 +65,7 @@ class TodoItems extends React.PureComponent {
 			(records) => { ComponentUtil.forceRefresh(this, { userNotifications : records } ); }, 
 			'timestamp' 
 		);	
-		this.monitorToDoItemCollection();
+		this.monitorToDoItemsCollection();
 	}
 	// ___loadToDoItemsFromDatabase = () => {
 
@@ -75,33 +79,12 @@ class TodoItems extends React.PureComponent {
 	// 	);
 	// }
 	googleLogin() {
+
 		firestoreManager.googleLogin();
 	}
 
 	// --- Entity operations ---
-
-	updateToDo = (todo) => {
 	
-		return firestoreManager.updateRecord(TODO_ITEMS_COLLECTION_NAME, todo);
-	}
-	addToDo = (todo) => {
-
-		if(firestoreManager.batchModeOn) {
-
-			firestoreManager.addRecord(TODO_ITEMS_COLLECTION_NAME, todo);
-		}
-		else {
-
-			firestoreManager.addRecord(TODO_ITEMS_COLLECTION_NAME, todo)
-				.then(() => {
-					this.clearDescriptionToDoTextBox();
-				})			
-		}
-	}
-	deleteToDo = (id) => {
-
-		return firestoreManager.deleteRecord(TODO_ITEMS_COLLECTION_NAME, id);
-	}
 	markAllAsCompleted = (isCompleted) => {
 
 		return ComponentUtil.executeAsBusy(this,
@@ -109,7 +92,7 @@ class TodoItems extends React.PureComponent {
 				const promises = [];
 				this.state.todoItems.forEach((todo) => {
 					todo.isCompleted = isCompleted;
-					promises.push(this.updateToDo(todo));
+					promises.push(ToDo.update(todo));
 				});
 				return Promise.all(promises);
 			}
@@ -125,43 +108,47 @@ class TodoItems extends React.PureComponent {
 	}
 	deleteAll = () => {
 
-		this.stopMonitorToDoItemCollection();
+		this.stopMonitorToDoItemsCollection();
 		ComponentUtil.executeAsBusy(this,
 			() => {
 				const batch = firestoreManager.startBatch();
 				this.state.todoItems.forEach((todo) => {
-					this.deleteToDo(todo.id);
+					ToDo.delete(todo.id);
 				});
 				return firestoreManager.commitBatch(batch);
 			}
 		).then(() => {
-			this.monitorToDoItemCollection();
+			this.monitorToDoItemsCollection();
 		});
 	}
 	generateData = () => {
 
-		const maxDefaultValue = 16;
+		const maxDefaultValue = 10;
 		const maxAsString = prompt('How many todo do you want to create?', maxDefaultValue.toString());
 		if(maxAsString === null) 
 			return;
 		let max = parseInt(maxAsString);
-		if(max > DEFAULT_MAX_RECORD) {
-			max = DEFAULT_MAX_RECORD;
+		if(max > maxDefaultValue) {
+			max = maxDefaultValue;
 			alert(`Cannot create this number of records, max value is ${max}`);
 		}
 
-		this.stopMonitorToDoItemCollection();
+		this.stopMonitorToDoItemsCollection();
 		ComponentUtil.executeAsBusy(this,
 			() => {
 				console.log(`Creating ${max} todo items...`);
 				const batch = firestoreManager.startBatch();
+				const maxOrder = ToDo.getMaxOrder(this.state.todoItems);
 				for(let i = 0; i < max; i++) {
-					this.addToDo(ToDo.create(`To do ${i} . . .`));
+					ToDo.add(ToDo.create(
+						`To do ${i} . . .`,
+						maxOrder + i
+						));
 				}
 				return firestoreManager.commitBatch(batch);
 			}
 		).then(() => {
-			this.monitorToDoItemCollection();
+			this.monitorToDoItemsCollection();
 		});
 	}
 	
@@ -175,37 +162,40 @@ class TodoItems extends React.PureComponent {
 		let className = isLoading ? "btn btn-outline-warning" : "btn btn-outline-primary";
 
 		return <div>
-			<Button isLoading={this.props.isLoading} text="Add" onClick={this.handleSubmit} />
+			<Button isLoading={isLoading} text="Add" onClick={this.handleSubmit} />
 			&nbsp;
-			<Button isLoading={this.props.isLoading} text={`Sort ${firestoreManager.invertOrderDirection(this.state.todoOrderDirection)}`} onClick={this.revertToDoItemsSortOrder} />
+			<Button isLoading={isLoading} text={`Sort ${firestoreManager.invertOrderDirection(this.state.todoOrderDirection)}`} onClick={this.revertToDoItemsSortOrder} />
 			&nbsp;
-			<Button isLoading={this.props.isLoading} text="All Done" onClick={this.markAllAsDone} />
+			<Button isLoading={isLoading} text="All Done" onClick={this.markAllAsDone} />
 			&nbsp;
-			<Button isLoading={this.props.isLoading} text="Reset All" onClick={this.markAllAsNotDone} />
+			<Button isLoading={isLoading} text="Reset All" onClick={this.markAllAsNotDone} />
 			&nbsp;
-			<Button isLoading={this.props.isLoading} text="Delete All" onClick={this.deleteAll} />
+			<Button isLoading={isLoading} text="Delete All" onClick={this.deleteAll} />
 			&nbsp;
-			<Button isLoading={this.props.isLoading} text="Generate Data" onClick={this.generateData} />
+			<Button isLoading={isLoading} text="Generate Data" onClick={this.generateData} />
 			&nbsp;
 			<br/>
-			<Button isLoading={this.props.isLoading} text="Google Login" onClick={this.googleLogin} />
-
+			<Button isLoading={isLoading} text="Google Login" onClick={this.googleLogin} />
 			&nbsp; &nbsp;
-			<input type="checkbox" style={{transform: 'scale(1.75)'}} id="chkShowDate"
-				  checked={this.state.showDate} onChange={this.onShowDateCheckboxClick} 
-				/>&nbsp;Show Date
+			<Checkbox
+				isLoading={isLoading}
+				text="Show Date"
+				checked={this.state.showDate} 
+				onChange={this.onShowDateCheckboxClick} 
+			/>
 		</div>;
 	}
 	renderToDoItemToJsx = (todoItem) => {
 
 		return <TodoItem 
 			id={todoItem.id}
+			order={todoItem.order}
 			createdAt={todoItem.createdAt}
 			description={todoItem.description} 
 			isCompleted={todoItem.isCompleted}
 			key={todoItem.id}
-			updateToDo={this.updateToDo}
-			deleteToDo={this.deleteToDo}
+			updateToDo={ToDo.update}
+			deleteToDo={ToDo.delete}
 			showDate={this.state.showDate}
 		/>;
 	}
@@ -245,7 +235,11 @@ class TodoItems extends React.PureComponent {
 
 		var description = this.state.editText.trim();
 		if(description)
-			this.addToDo(ToDo.create(description));
+			ToDo.add(ToDo.create(description, ToDo.getMaxOrder(this.state.todoItems)+1))
+			.then(() => {
+				this.clearDescriptionToDoTextBox();
+			});
+			
 	}
 	handleKeyDown = (event) => {
 
@@ -261,9 +255,7 @@ class TodoItems extends React.PureComponent {
 			todoOrderDirection: firestoreManager.invertOrderDirection(this.state.todoOrderDirection), 
 			isLoading: true 
 		});
-		setTimeout(() => {
-			this.monitorToDoItemCollection();
-		this.monitorToDoItemCollection();}, 10);
+		this.monitorToDoItemsCollection();
 	}
 	render() {
 
@@ -303,6 +295,8 @@ class TodoItems extends React.PureComponent {
 
 				<small>
 				{/* timeStamp: {this.state.timeStamp} <br/> */}
+				MaxOrder: { ToDo.getMaxOrder(this.state.todoItems)}
+				&nbsp; -- 
 				Logged on user: {firestoreManager.getCurrentUser() ? firestoreManager.getCurrentUser().displayName: 'None'}
 				</small>
 			</section>

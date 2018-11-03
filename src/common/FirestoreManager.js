@@ -1,16 +1,41 @@
+/*
+	Firebase / Cloud Firestore helper class
+
+	Auth: https://firebase.google.com/docs/auth/web/manage-users?authuser=0
+	Pricing: https://firebase.google.com/pricing/?authuser=0
+	Database operation
+		Query
+			https://firebase.google.com/docs/database/web/lists-of-data
+			https://firebase.google.com/docs/firestore/query-data/listen
+			https://firebase.google.com/docs/database/web/read-and-write
+		Delete
+			https://firebase.google.com/docs/firestore/manage-data/delete-data
+		Add			
+			https://firebase.google.com/docs/firestore/manage-data/add-data
+			https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes
+
+	Torres Frederic 2018			
+*/
 import Tracer from './Tracer';
 import moment from "moment"; // http://momentjs.com/
 import FirestoreManagerConfig from './FirestoreManagerConfig';
+import ComponentUtil from './ComponentUtil';
 
 export const DEFAULT_MAX_RECORD = 400;
 
 const getSettings = () => {
+
 	return { timestampsInSnapshots: true };
 }
 
+// This class is exported as a singleton.
+// Therefore static members could be just members
 class FirestoreManager {
 
 	static _initialized = false;
+
+	// Static object to store snapshot unsusbcribe method, to be able to 
+	// unsubscribe and stop monitoring data
 	static _monitoredSnapshot = {
 
 	};
@@ -47,7 +72,7 @@ class FirestoreManager {
 			} else {
 				console.log('No user change');
 			}
-		});		
+		});
 	}
 	getCurrentUser() {
 
@@ -57,13 +82,14 @@ class FirestoreManager {
 	googleLogin() {
 
 		const provider = new firebase.auth.GoogleAuthProvider();
-		firebase.auth().signInWithPopup(provider).then((result) => {
-			const user = result.user;
-			console.dir(user);
-			alert(`Hello ${user.displayName}`);
-		}).catch((error) => {
-			console.error(error);
-		});
+		firebase.auth().signInWithPopup(provider)
+			.then((result) => {
+				const user = result.user;
+				alert(`Hello ${user.displayName}`);
+			})
+			.catch((error) => {
+				Tracer.error(error, this);
+			});
 	}
 	getFirestoreDB() {
 
@@ -84,12 +110,15 @@ class FirestoreManager {
 		return this.getFirestoreDB().collection(name);
 	}
 	startBatch() {
+		
 		Tracer.log(`startBatch`, this);
 		this.batchModeOn = true;
 		return this.getFirestoreDB().batch();
 	}
 	commitBatch(batch) {
+
 		Tracer.log(`commitBatch`, this);
+		console.log('batch', batch);
 		this.batchModeOn = false;
 		return batch.commit();
 	}
@@ -169,9 +198,10 @@ class FirestoreManager {
 			// Duplicate the object for now, trying to removed and add the
 			// id property created some problem
 			const data = Object.assign({}, oData);
-
-			Tracer.log(`updateRecord data:${JSON.stringify(data)}`, this);
 			const longId = data[idFieldName];
+			const idStringForTracing = `${idFieldName}:${longId}`;
+			Tracer.log(`updateRecord ${idStringForTracing}`, this);
+			
 			const id 	 = this.extractId(longId);
 			delete data[idFieldName];
 
@@ -184,12 +214,12 @@ class FirestoreManager {
 
 			p.then(() => {
 
-					Tracer.log(`updateRecord ${idFieldName}:${longId} succeeded`, this);
+					Tracer.log(`updateRecord ${idStringForTracing} succeeded`, this);
 					resolve(longId);
 
 			}).catch((error) => {
 
-				this.showErrorToUser(`updateRecord ${idFieldName}:${longId} failed ${error}`);
+				this.showErrorToUser(`updateRecord ${idStringForTracing} failed ${error}`);
 				reject(error);
 			});
 		});
@@ -231,24 +261,25 @@ class FirestoreManager {
 		if(this.batchModeOn) {
 
 			// Tracer.log(`addRecord batch`, this);
-			const id = this.getNewUniqueId();
+			const id = ComponentUtil.getNewUniqueId();
 			this.getCollection(collection).doc(id).set(data);
 		}
-		else {
+		else { 
 
 			return new Promise((resolve, reject) => {
 
-				Tracer.log(`addRecord data:${JSON.stringify(data)}`, this);
-				const id = this.getNewUniqueId();
+				const id = ComponentUtil.getNewUniqueId();
+				const idStringForTracing = `${idFieldName}:${id}`;
+				Tracer.log(`addRecord ${idStringForTracing}`, this);
 				this.getCollection(collection).doc(id).set(data)
 					.then(() => {
 
-						Tracer.log(`addRecord ${idFieldName}:${id} succeeded`, this);
+						Tracer.log(`addRecord ${idStringForTracing} succeeded`, this);
 						resolve({ ...data, [idFieldName]:`${collection}/${id}` });
 					})
 					.catch((error) => {
 
-						this.showErrorToUser(`addRecord ${idFieldName}:${id} failed ${error}`);
+						this.showErrorToUser(`addRecord ${idStringForTracing} failed ${error}`);
 						reject(error);
 					});
 			});
@@ -273,11 +304,8 @@ class FirestoreManager {
 
 		return firebase.firestore.Timestamp.now();
 	}
-	getNewUniqueId() {
-		
-		return Math.random().toString(16).substr(2, 16);
-	}	
 	invertOrderDirection(d) {
+
 		return d === 'desc' ? 'asc' : 'desc';
 	}
 }  

@@ -69,6 +69,10 @@ class ComponentUtil  {
 			}, 100);
 		});
 	}	
+	static getNewUniqueId() {
+		
+		return Math.random().toString(16).substr(2, 16);
+	}
 }
 
 export default ComponentUtil;

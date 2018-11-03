@@ -36,6 +36,14 @@ class Tracer {
 		this.internalTrace(`%c ${mm}%c ${m}`, 'color:green;', 'color:red;', console.error);
 		return mm + m;
 	}
+	throw (error, instance = null) {
+		this.error(error.toString(), instance);
+		throw error;
+	}
+	throwIfUndefined(parameter, parameterName, instance = null) {
+		if(typeof(parameter) === 'undefined')
+			this.throw(`Parameter ${parameterName} must be defined`, instance);
+	}	
 }
 
 export default new Tracer();

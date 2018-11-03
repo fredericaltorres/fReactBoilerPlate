@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import tracer from '../common/Tracer';
 import firestoreManager from "../common/FirestoreManager";
+import ToDo from './todo';
 
 const isMobile = false;
 
@@ -14,6 +15,7 @@ class TodoItem extends React.PureComponent {
 		isCompleted 	: PropTypes.bool.isRequired,
 		createdAt 		: PropTypes.object.isRequired,
 		showDate		: PropTypes.bool.isRequired,
+		order			: PropTypes.number.isRequired,
 		updateToDo		: PropTypes.func.isRequired,
 		deleteToDo		: PropTypes.func.isRequired,
 	};
@@ -23,13 +25,8 @@ class TodoItem extends React.PureComponent {
 	}
 	onCheckClick = (e) => {
 
-		const checked = e.target.checked;	
-		const todo = {
-			id : this.props.id,
-			description: this.props.description,
-			createdAt: this.props.createdAt,
-			isCompleted : checked,
-		};
+		const isCompleted = e.target.checked;	
+		const todo = ToDo.createFromProps(this.props, { isCompleted });
 		this.props.updateToDo(todo);
 	}	
 	getDay (createdTime) {
@@ -57,7 +54,7 @@ class TodoItem extends React.PureComponent {
 	render() {
 
 		return (
-			<li key={this.props.id} id={this.props.id} className="list-group-item">
+			<li key={this.props.id} id={this.props.id} order={this.props.order} className="list-group-item">
 				<input 
 				style={{transform: 'scale(1.75)'}} 
 				checked={this.props.isCompleted} type="checkbox" 
@@ -65,7 +62,7 @@ class TodoItem extends React.PureComponent {
 				/>
 				&nbsp; Done &nbsp;
 				<button type="button" className="btn  btn-success" onClick={this.onDeleteClick}>Delete</button>
-				&nbsp; {this.props.description}
+				&nbsp; {this.props.description} - ({this.props.order})
 				{this.getCreatedTimeJsx()}
 			</li>
 		);
