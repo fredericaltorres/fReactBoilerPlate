@@ -21,7 +21,8 @@ import moment from "moment"; // http://momentjs.com/
 import FirestoreManagerConfig from './FirestoreManagerConfig';
 import ComponentUtil from './ComponentUtil';
 
-export const DEFAULT_MAX_RECORD = 400;
+const DEFAULT_MAX_RECORD = 400;
+const DEFAULT_ID_FIELD_NAME = "id";
 
 const getSettings = () => {
 
@@ -127,10 +128,10 @@ class FirestoreManager {
 		Tracer.error(msg, this);
 		alert(`ERROR: ${msg}`);
 	}
-	__rebuildDocument(doc) {
+	__rebuildDocument(doc,  idFieldName = DEFAULT_ID_FIELD_NAME) {
 
 		const data = doc.data();
-		data.id = doc._key.toString();
+		data[idFieldName] = doc._key.toString();
 		return data;
 	}
 	__rebuildDocuments(documents) {
@@ -142,6 +143,7 @@ class FirestoreManager {
 		return records;
 	}
 	__unsubscribeMonitoredSnapshot(unsubscribe) {
+
 		unsubscribe();
 	}
 	stopMonitorQuery(collection) {
@@ -191,18 +193,18 @@ class FirestoreManager {
 		});
 	}
 	// https://firebase.google.com/docs/database/web/read-and-write
-	updateRecord(collection, oData, idFieldName = "id", overWriteDoc = true) {
+	updateRecord(collection, oData, idFieldName = DEFAULT_ID_FIELD_NAME, overWriteDoc = true) {
 
 		return new Promise((resolve, reject) => {
 
 			// Duplicate the object for now, trying to removed and add the
-			// id property created some problem
+			// id property created some problems
 			const data = Object.assign({}, oData);
 			const longId = data[idFieldName];
 			const idStringForTracing = `${idFieldName}:${longId}`;
 			Tracer.log(`updateRecord ${idStringForTracing}`, this);
 			
-			const id 	 = this.extractId(longId);
+			const id = this.extractId(longId);
 			delete data[idFieldName];
 
 			const docRef = this.getCollection(collection).doc(id);
@@ -214,8 +216,8 @@ class FirestoreManager {
 
 			p.then(() => {
 
-					Tracer.log(`updateRecord ${idStringForTracing} succeeded`, this);
-					resolve(longId);
+				Tracer.log(`updateRecord ${idStringForTracing} succeeded`, this);
+				resolve(longId);
 
 			}).catch((error) => {
 
@@ -256,7 +258,7 @@ class FirestoreManager {
 	}
 	// https://firebase.google.com/docs/firestore/manage-data/add-data
 	// https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes
-	addRecord(collection, data, idFieldName = "id") {
+	addRecord(collection, data, idFieldName = DEFAULT_ID_FIELD_NAME) {
 
 		if(this.batchModeOn) {
 
