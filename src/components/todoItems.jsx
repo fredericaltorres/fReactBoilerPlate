@@ -1,22 +1,17 @@
 import React from "react";
 import PropTypes from "prop-types";
 import tracer from '../common/Tracer';
-
 import TodoItem from './todoItem';
 import Button from './Button';
 import Checkbox from './Checkbox';
-
 import firestoreManager from '../common/FirestoreManager';
-
 import ComponentUtil from '../common/ComponentUtil';
-
+import { ESCAPE_KEY, ENTER_KEY } from '../common/ComponentUtil';
 import ToDo from './todo';
 import { TODO_ITEMS_COLLECTION_NAME } from './todo';
-
-import { ESCAPE_KEY, ENTER_KEY } from '../common/ComponentUtil';
 import Tracer from "../common/Tracer";
 
-const USER_NOTIFICATION_COLLECTION_NAME = 'userNotifications'; 
+const USER_NOTIFICATION_COLLECTION_NAME = 'userNotifications';
 
 class TodoItems extends React.PureComponent {
 
@@ -85,8 +80,11 @@ class TodoItems extends React.PureComponent {
 
 	// --- Entity operations ---
 	
+	// Update multiple todo using an array of promise, each promise
+	// Update one todo. Do not use the batch mode here
 	markAllAsCompleted = (isCompleted) => {
 
+		this.stopMonitorToDoItemsCollection();
 		return ComponentUtil.executeAsBusy(this,
 			() => {
 				const promises = [];
@@ -95,8 +93,11 @@ class TodoItems extends React.PureComponent {
 					promises.push(ToDo.update(todo));
 				});
 				return Promise.all(promises);
+			},
+			() => {
+				this.monitorToDoItemsCollection();
 			}
-		);					
+		);
 	}
 	markAllAsDone = () => {
 
@@ -116,10 +117,11 @@ class TodoItems extends React.PureComponent {
 					ToDo.delete(todo.id);
 				});
 				return firestoreManager.commitBatch(batch);
+			},
+			() => {
+				this.monitorToDoItemsCollection();
 			}
-		).then(() => {
-			this.monitorToDoItemsCollection();
-		});
+		);
 	}
 	generateData = () => {
 
@@ -127,6 +129,7 @@ class TodoItems extends React.PureComponent {
 		const maxAsString = prompt('How many todo do you want to create?', maxDefaultValue.toString());
 		if(maxAsString === null) 
 			return;
+
 		let max = parseInt(maxAsString);
 		if(max > maxDefaultValue) {
 			max = maxDefaultValue;
@@ -136,14 +139,11 @@ class TodoItems extends React.PureComponent {
 		this.stopMonitorToDoItemsCollection();
 		ComponentUtil.executeAsBusy(this,
 			() => {
-				console.log(`Creating ${max} todo items...`);
+				Tracer.log(`Creating ${max} todo items...`, this);
 				const batch = firestoreManager.startBatch();
 				const maxOrder = ToDo.getMaxOrder(this.state.todoItems);
 				for(let i = 0; i < max; i++) {
-					ToDo.add(ToDo.create(
-						`To do ${i} . . .`,
-						maxOrder + i
-						));
+					ToDo.add(ToDo.create(`To do ${i} . . .`, maxOrder + i ));
 				}
 				return firestoreManager.commitBatch(batch);
 			}
@@ -164,7 +164,11 @@ class TodoItems extends React.PureComponent {
 		return <div>
 			<Button isLoading={isLoading} text="Add" onClick={this.handleSubmit} />
 			&nbsp;
-			<Button isLoading={isLoading} text={`Sort ${firestoreManager.invertOrderDirection(this.state.todoOrderDirection)}`} onClick={this.revertToDoItemsSortOrder} />
+			<Button isLoading={isLoading} text={`Sort ${
+				firestoreManager.orderDirectionIcon(
+					firestoreManager.invertOrderDirection(this.state.todoOrderDirection)
+				)
+				}`} onClick={this.revertToDoItemsSortOrder} />
 			&nbsp;
 			<Button isLoading={isLoading} text="All Done" onClick={this.markAllAsDone} />
 			&nbsp;
@@ -264,7 +268,7 @@ class TodoItems extends React.PureComponent {
 		let statusClassName = this.state.isLoading ? "alert alert-warning" : "alert alert-success";
 
 		return (
-			<section>
+			<div>
 				<div className="input-group" style={{marginBottom:'5px'}}>
 					<input
 						disabled={this.props.isLoading} 
@@ -299,7 +303,7 @@ class TodoItems extends React.PureComponent {
 				&nbsp; -- 
 				Logged on user: {firestoreManager.getCurrentUser() ? firestoreManager.getCurrentUser().displayName: 'None'}
 				</small>
-			</section>
+			</div>
 		); 
 	}
 }

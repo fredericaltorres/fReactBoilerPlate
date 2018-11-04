@@ -1,4 +1,5 @@
 import TypeUtil from './TypeUtil'
+import { type } from 'os';
 
 describe('TypeUtil', () => {
 
@@ -16,6 +17,20 @@ describe('TypeUtil', () => {
 		expect(TypeUtil.getType(undefined)).toEqual('undefined');
 		expect(TypeUtil.getType({})).toEqual('Object');
 	});
+
+	[
+		{ 
+			typeDef : { n:'Number', s:'String', b:'Boolean', o:'Object', nu:'null', date:'Date', array:'Array', func:'Function' }, 
+		  	actualObj : { n:1, s:'s', b:true, o:{}, nu:null, date:new Date(), array:[], func:() => {} } 
+		}
+	].forEach(
+		({typeDef, actualObj}) => {
+			it(`verifyType typeDef:${JSON.stringify(typeDef)}`, () => {
+				expect(TypeUtil.verifyType(typeDef, actualObj, false)).toBe(true);
+			});
+		}
+	);
+	
 	it('Is XXXXXX', () => {
 
 		expect(TypeUtil.isString("aaa")).toBe(true);
@@ -35,5 +50,10 @@ describe('TypeUtil', () => {
 		expect(TypeUtil.isRegExp(/a/)).toBe(true);
 		expect(TypeUtil.isFunction(() => {})).toBe(true);
 		expect(TypeUtil.isObject({})).toBe(true);
+
+		expect(TypeUtil.isPromise({})).toBe(false);
+		const p = new Promise((resolve, reject) => {
+		});
+		expect(TypeUtil.isPromise(p)).toBe(true);
 	});
 });

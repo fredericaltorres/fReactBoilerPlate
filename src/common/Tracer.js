@@ -11,7 +11,7 @@ class Tracer {
 		if (instance && instance.name) return instance.name;
 		return '';
 	}
-	getTimeStamp = () => {
+	getTimeStamp () {
 		return new Date().toLocaleTimeString('en-US');
 	};
 	getPrefix(instance) {

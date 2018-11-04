@@ -43,7 +43,7 @@ class ComponentUtil  {
 	// 			ComponentUtil.setIsLoading(reactComponent, false);
 	// 	}
 	// }
-	static executeAsBusy(reactComponent, func) {
+	static executeAsBusy(reactComponent, func, onDoneFunc = null) {
 		
 		if(!TypeUtil.isFunction(func))
 			TypeUtil.throwInvalidParameterType('func', 'function');
@@ -53,12 +53,14 @@ class ComponentUtil  {
 
 		return new Promise((resolve, reject) => {
 
-			setTimeout(() => {
-
+			// setTimeout(() => {
 				const r = func();
-				if(r && r.then) { // If it is a Promise
+				if(r && TypeUtil.isPromise(r)) {
 					return r.then(() => {
 						ComponentUtil.setIsLoading(reactComponent, false);
+						if(onDoneFunc) {
+							onDoneFunc();
+						}
 						resolve();
 					});
 				} 
@@ -66,7 +68,7 @@ class ComponentUtil  {
 					ComponentUtil.setIsLoading(reactComponent, false);
 				}
 				resolve();
-			}, 100);
+			// }, 100);
 		});
 	}	
 	static getNewUniqueId() {

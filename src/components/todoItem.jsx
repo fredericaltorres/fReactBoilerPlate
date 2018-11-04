@@ -62,7 +62,8 @@ class TodoItem extends React.PureComponent {
 				/>
 				&nbsp; Done &nbsp;
 				<button type="button" className="btn  btn-success" onClick={this.onDeleteClick}>Delete</button>
-				&nbsp; {this.props.description} - ({this.props.order})
+				&nbsp; {this.props.description}
+				 {/* - ({this.props.order}) */}
 				{this.getCreatedTimeJsx()}
 			</li>
 		);

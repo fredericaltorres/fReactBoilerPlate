@@ -149,6 +149,7 @@ class FirestoreManager {
 	stopMonitorQuery(collection) {
 		
 		if(FirestoreManager._monitoredSnapshot[collection]) {
+
 			Tracer.log(`Unsubscribe monitored snapshot:${collection}`);
 			this.__unsubscribeMonitoredSnapshot(FirestoreManager._monitoredSnapshot[collection]);
 			delete FirestoreManager._monitoredSnapshot[collection];
@@ -171,7 +172,7 @@ class FirestoreManager {
 				if(callBack) callBack(records);
 			}
 			catch(ex) {
-				Tracer.error(`monitorQuery ${collection} failed calling callback`);
+				Tracer.error(`monitorQuery ${collection} failed '${ex}' calling callback`);
 			}
 		});
 		return true;
@@ -195,36 +196,40 @@ class FirestoreManager {
 	// https://firebase.google.com/docs/database/web/read-and-write
 	updateRecord(collection, oData, idFieldName = DEFAULT_ID_FIELD_NAME, overWriteDoc = true) {
 
-		return new Promise((resolve, reject) => {
+		// Duplicate the object for now, trying to removed and add the
+		// id property created some problems
+		const data = Object.assign({}, oData);
+		const longId = data[idFieldName];
+		const idStringForTracing = `${idFieldName}:${longId}`;
+		Tracer.log(`updateRecord ${idStringForTracing}`, this);				
+		const id = this.extractId(longId);
+		delete data[idFieldName];
+		const docRef = this.getCollection(collection).doc(id); // Load the record
 
-			// Duplicate the object for now, trying to removed and add the
-			// id property created some problems
-			const data = Object.assign({}, oData);
-			const longId = data[idFieldName];
-			const idStringForTracing = `${idFieldName}:${longId}`;
-			Tracer.log(`updateRecord ${idStringForTracing}`, this);
-			
-			const id = this.extractId(longId);
-			delete data[idFieldName];
+		let p = null;
+		if(overWriteDoc)
+			p = docRef.set(data); // overwrite mode
+		else				
+			p = docRef.update(data); // Merge mode
 
-			const docRef = this.getCollection(collection).doc(id);
-			let p = null;
-			if(overWriteDoc)
-				p = docRef.set(data);
-			else				
-				p = docRef.update(data);
+		if(this.batchModeOn) {
 
-			p.then(() => {
+		}
+		else {
+			return new Promise((resolve, reject) => {
 
-				Tracer.log(`updateRecord ${idStringForTracing} succeeded`, this);
-				resolve(longId);
+				p.then(() => {
 
-			}).catch((error) => {
+					Tracer.log(`updateRecord ${idStringForTracing} succeeded`, this);
+					resolve(longId);
 
-				this.showErrorToUser(`updateRecord ${idStringForTracing} failed ${error}`);
-				reject(error);
+				}).catch((error) => {
+
+					this.showErrorToUser(`updateRecord ${idStringForTracing} failed ${error}`);
+					reject(error);
+				});
 			});
-		});
+		}
 	}
 	// https://firebase.google.com/docs/firestore/manage-data/delete-data
 	deleteRecord(collection, id) {
@@ -309,6 +314,9 @@ class FirestoreManager {
 	invertOrderDirection(d) {
 
 		return d === 'desc' ? 'asc' : 'desc';
+	}
+	orderDirectionIcon(d) {
+		return d === 'desc' ? "D" : "A";
 	}
 }  
 
