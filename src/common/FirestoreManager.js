@@ -5,6 +5,7 @@
 	Pricing: https://firebase.google.com/pricing/?authuser=0
 	Database operation
 		Query
+			https://firebase.google.com/docs/firestore/query-data/get-data
 			https://firebase.google.com/docs/database/web/lists-of-data
 			https://firebase.google.com/docs/firestore/query-data/listen
 			https://firebase.google.com/docs/database/web/read-and-write
@@ -20,6 +21,7 @@ import Tracer from './Tracer';
 import moment from "moment"; // http://momentjs.com/
 import FirestoreManagerConfig from './FirestoreManagerConfig';
 import ComponentUtil from './ComponentUtil';
+import TypeUtil from './TypeUtil';
 
 const DEFAULT_MAX_RECORD = 400;
 const DEFAULT_ID_FIELD_NAME = "id";
@@ -163,11 +165,19 @@ class FirestoreManager {
 		Tracer.log(`monitorQuery ${collection}, orderByColumn:${orderByColumn}/${orderDirection}, maxRecord:${maxRecord}`, this);
 		this.stopMonitorQuery(collection);
 
+		let query = null;
+		if(orderByColumn) {
+			query = this.getCollection(collection)
+				.orderBy(orderByColumn, orderDirection)
+					.limit(maxRecord);
+		}
+		else {
+			query = this.getCollection(collection).limit(maxRecord);
+		}
+
 		// Return a function handler that can unsubscribe the snapshot 
-		FirestoreManager._monitoredSnapshot[collection] = this.getCollection(collection)
-		.orderBy(orderByColumn, orderDirection)
-		.limit(maxRecord)
-		.onSnapshot((querySnapshot) => {
+		FirestoreManager._monitoredSnapshot[collection] = query.onSnapshot((querySnapshot) => {
+
 			const records = this.__rebuildDocuments(querySnapshot)
 			try {
 				if(callBack) callBack(records);
@@ -178,19 +188,65 @@ class FirestoreManager {
 		});
 		return true;
 	}
-	loadDataFromCollection(collection, orderByColumn = null, orderDirection = 'desc', maxRecord = DEFAULT_MAX_RECORD) {
+	loadDocument(collection, documentId, subCollections = null) {
 
-		Tracer.log(`loadDataFromCollection(${collection}, ${orderByColumn}, ${orderDirection}, ${maxRecord})`, this);
+		Tracer.log(`loadDocument(${collection}, ${documentId})`, this);
+		return new Promise((resolve, reject) => {
+			
+			const docRef = this.getCollection(collection).doc(documentId);
+			docRef.get().then(doc =>  {
+
+				const item = this.__rebuildDocument(doc)
+				if(TypeUtil.isArray(subCollections)) {  // Load sub collections
+
+					const promises = [];
+
+					subCollections.forEach((subCol) => {
+
+						const subColQuery = `${item.id}/${subCol}`;
+						Tracer.log(`loadDocument(${collection}, ${documentId}, SubCollection:(${subColQuery}) )`, this);
+						promises.push(this.loadDocuments(subColQuery, null, null, DEFAULT_MAX_RECORD, subCol));
+					});
+					Promise.all(promises).then((results) => {
+
+						results.forEach((result) => {
+
+							const key = Object.keys(result)[0];
+							const val = result[key];
+							item[key] = val;
+						});
+						resolve(item);
+					});
+				}
+				else {
+					resolve(item);
+				}
+			});
+		});
+	}
+	loadDocuments(collection, orderByColumn = null, orderDirection = 'desc', maxRecord = DEFAULT_MAX_RECORD, nameResult = null) {
+
+		Tracer.log(`loadDocuments(${collection}, ${orderByColumn}, ${orderDirection}, ${maxRecord})`, this);
 
 		return new Promise((resolve, reject) => {
 
 			const dbToDoItems = this.getCollection(collection);
-			const query = dbToDoItems.orderBy(orderByColumn, orderDirection).limit(maxRecord);
+			let query = null;
+			if(orderByColumn)
+				query = dbToDoItems.orderBy(orderByColumn, orderDirection).limit(maxRecord);
+			else				
+				query = dbToDoItems.limit(maxRecord);
+
 			query.get().then(todoItems => {
 
 				const items = this.__rebuildDocuments(todoItems)
-				Tracer.log(`loadDataFromCollection(${items.length} records loaded)`, this);
-				resolve(items);
+				Tracer.log(`loadDocuments(${items.length} records loaded)`, this);
+				if(nameResult) {
+					resolve( { [nameResult]:items } );
+				}
+				else {
+					resolve(items);
+				}	
 			});
 		});
 	}

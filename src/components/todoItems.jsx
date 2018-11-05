@@ -40,6 +40,18 @@ class TodoItems extends React.PureComponent {
 	}
 	monitorToDoItemsCollection() {
 
+		// Load the testPlans and its steps
+		firestoreManager.loadDocument('testPlans','829378c31320a', ['steps'])
+			.then((doc) => {
+				alert(JSON.stringify(doc));
+			});
+
+		// // Load a specific TestPlan Step
+		// firestoreManager.loadDocument('testPlans/829378c31320a/steps','ITFC9eJd8U13AimEkon7')
+		// .then((doc) => {
+		// 	alert(JSON.stringify(doc));
+		// });
+
 		firestoreManager.monitorQuery(
 			ToDo.getCollectionName(),
 			(records) => { 

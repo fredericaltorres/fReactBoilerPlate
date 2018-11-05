@@ -8,6 +8,48 @@ import { FireStoreDocumentBaseClass}  from '../common/FireStoreDocumentBaseClass
 // TestPlan Type Definition
 export const TypeDef = {
 
+	__name: 		'TestCase',
+	__collectionName:'', // stored in parent object
+
+	id:				'String',
+	name:			'String',
+	description:	'String',
+	createdAt: 		FIRESTORE_TIMESTAMP,
+	updatedAt: 		FIRESTORE_TIMESTAMP,
+}
+
+// This class allow to add, update, delete document of the type definition ToDo.
+// This class or the instance of this class is not the document created, updated or deleted. 
+export class TestCase extends FireStoreDocumentBaseClass {
+
+	constructor() {
+
+		super(TypeDef);
+		this.name = 'TestCase';
+		Tracer.log(`constructor`, this);
+	}
+	create(name, description) {
+
+		const id = ComponentUtil.getNewUniqueId(); // Do not prefix the id with the name of the collection, firebase does not like it
+		if(name === null)
+			name = `Name ${id}`;
+
+		const doc = {
+			id,
+			name,
+			description,
+			createdAt: firestoreManager.now(),
+			updatedAt: firestoreManager.now(),
+		}
+		return doc;
+	}	
+};
+
+
+
+// TestPlan Type Definition
+export const TypeDef = {
+
 	__name: 		'TestPlan',
 	__collectionName:'testPlans',
 
@@ -19,32 +61,6 @@ export const TypeDef = {
 	updatedAt: 		FIRESTORE_TIMESTAMP,
 }
 
-// This class allow to add, update, delete document of the type definition ToDo.
-// This class or the instance of this class is not the document created, updated or deleted. 
-export class TestPlan extends FireStoreDocumentBaseClass {
 
-	constructor() {
-
-		super(TypeDef);
-		this.name = 'TestPlan';
-		Tracer.log(`constructor`, this);
-	}
-	create(name, description, author) {
-
-		const id = ComponentUtil.getNewUniqueId(); // Do not prefix the id with the name of the collection, firebase does not like it
-		if(name === null)
-			name = `Name ${id}`;
-
-		const doc = {
-			id,
-			name,
-			description,
-			author,
-			createdAt: firestoreManager.now(),
-			updatedAt: firestoreManager.now(),
-		}
-		return doc;
-	}	
-};
 
 export default new TestPlan();
