@@ -284,6 +284,8 @@ class TodoItems extends React.PureComponent {
 
 		return (
 			<div>
+				<h2>Multi Users ToDo App with Firebase</h2>
+				
 				<div className="input-group" style={{marginBottom:'5px'}}>
 					<input
 						disabled={this.props.isLoading} 

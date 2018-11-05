@@ -5,9 +5,9 @@ import Routes from './Routes';
 const App = () => (
     <BrowserRouter>
           <main className="container">
-              <div>
+              {/* <div>
                   <h2>Multi Users ToDo App with Firebase</h2>
-              </div>
+              </div> */}
               {/* <ul className="left">
                   <li>
                       <Link to="/">Home</Link>

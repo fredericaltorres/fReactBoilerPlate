@@ -35,6 +35,9 @@ export class TestPlan extends FireStoreDocumentBaseClass {
 		if(name === null)
 			name = `Name ${id}`;
 
+		if(!description) description = `Description of ${name}`;
+		if(!author) author = `Unknown`;
+
 		const doc = {
 			id,
 			name,
