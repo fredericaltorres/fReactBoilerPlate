@@ -203,7 +203,7 @@ class FirestoreManager {
 		const idStringForTracing = `${idFieldName}:${longId}`;
 		Tracer.log(`updateRecord ${idStringForTracing}`, this);				
 		const id = this.extractId(longId);
-		delete data[idFieldName];
+		// The id property is stored twice as the document key and as the property id
 		const docRef = this.getCollection(collection).doc(id); // Load the record
 
 		let p = null;
@@ -265,19 +265,23 @@ class FirestoreManager {
 	// https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes
 	addRecord(collection, data, idFieldName = DEFAULT_ID_FIELD_NAME) {
 
+		// The id property is stored twice as the document key and as the property id
+		let id = data[idFieldName];
+		if(!id) {
+			id = ComponentUtil.getNewUniqueId();
+		}
+			
 		if(this.batchModeOn) {
 
-			// Tracer.log(`addRecord batch`, this);
-			const id = ComponentUtil.getNewUniqueId();
-			this.getCollection(collection).doc(id).set(data);
+			this.getCollection(collection).doc(id).set(data);			
 		}
 		else { 
 
 			return new Promise((resolve, reject) => {
-
-				const id = ComponentUtil.getNewUniqueId();
+				
 				const idStringForTracing = `${idFieldName}:${id}`;
 				Tracer.log(`addRecord ${idStringForTracing}`, this);
+
 				this.getCollection(collection).doc(id).set(data)
 					.then(() => {
 

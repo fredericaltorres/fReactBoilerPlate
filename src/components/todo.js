@@ -2,63 +2,49 @@ import firestoreManager from '../common/FirestoreManager';
 import ComponentUtil from '../common/ComponentUtil';
 import TypeUtil from '../common/TypeUtil';
 import Tracer from '../common/Tracer';
+import { FireStoreDocumentBaseClass}  from '../common/FireStoreDocumentBaseClass';
 
-export const TODO_ITEMS_COLLECTION_NAME = 'todoItems';
 
-const ToDoTypeDef = {
+// ToDo Type Definition
+export const TypeDef = {
 
-	__name: 'ToDo',
+	__name: 		'ToDo',
+	__collectionName:'todoItems',
 
-	description:	'String', 
-	isCompleted: 	'Boolean', 
+	id:				'String',
+	description:	'String',
+	isCompleted: 	'Boolean',
 	createdAt: 		'Object',
 	order: 			'Number',
 }
 
-export class ToDo {
+// This class allow to add, update, delete document of the type definition ToDo.
+// This class or the instance of this class is not the document created, updated or deleted. 
+export class ToDo extends FireStoreDocumentBaseClass {
 
-	static create(description, order) {
+	constructor() {
 
-		const todo = {
-			description, 
+		super(TypeDef);
+		this.name = 'ToDo';
+		Tracer.log(`constructor`, this);
+	}
+	create(description, order) {
+
+		const doc = {
+			id: ComponentUtil.getNewUniqueId(), // Do not prefix the id with the name of the collection, firebase does not like it
+			description,
 			isCompleted: false,
 			createdAt: firestoreManager.now(),
 			order,
 		}
-		TypeUtil.verifyType(ToDoTypeDef, todo);
-		return todo;
+		return doc;
 	}	
-	static createFromProps(props, otherProps) {
+	createFromProps(props, otherProps) {
 
-		const todo = {
-			id 			: props.id,
-			description	: props.description,
-			createdAt	: props.createdAt,
-			isCompleted : props.isCompleted,
-			order		: props.order,
-			...otherProps
-		};
-		TypeUtil.verifyType(ToDoTypeDef, todo);
-		return todo;
+		const doc = TypeUtil.createFromProps(this._typeDef, props, otherProps);
+		return doc;
 	}
-	// If executed in non batch mode return a promise
-	static update = (todo) => {
-	
-		TypeUtil.verifyType(ToDoTypeDef, todo);
-		return firestoreManager.updateRecord(TODO_ITEMS_COLLECTION_NAME, todo);
-	}
-	// If executed in non batch mode return a promise
-	static add = (todo) => {
-
-		TypeUtil.verifyType(ToDoTypeDef, todo, true);
-		return firestoreManager.addRecord(TODO_ITEMS_COLLECTION_NAME, todo);
-	}
-	// If executed in non batch mode return a promise
-	static delete = (id) => {
-
-		return firestoreManager.deleteRecord(TODO_ITEMS_COLLECTION_NAME, id);
-	}	
-	static getMaxOrder = (todoItems) => {
+	getMaxOrder = (todoItems) => {
 
 		let maxOrder = 0;
 		todoItems.forEach((todo) => {
@@ -67,5 +53,5 @@ export class ToDo {
 		});
 		return maxOrder;
 	}
-}
-export default ToDo;
+};
+export default new ToDo();

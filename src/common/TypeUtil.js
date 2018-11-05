@@ -9,8 +9,6 @@ class TypeUtil {
 			return "null";
 		if (typeof v === 'undefined')
 			return "undefined";
-		if (typeof v === 'undefined')
-			return "undefined";
 
 		type = Object.prototype.toString.call(v);
 		type = type.replace("[object ", "");
@@ -38,27 +36,57 @@ class TypeUtil {
 	}	
 	throwInvalidParameterType (parameterName, parameterValue, expectedType) {
 		if(this.getType(parameterValue)!==expectedType)
-			throw Error(`Parameter:${parameterName} must be of type:${expectedType}`);
+			Tracer.throw(Error(`Parameter:${parameterName} must be of type:${expectedType}`));
 	}
-	verifyType(typeDef, obj, throwEx = true) {
 
+/// TypeDef methods
+
+	getTypeDefProperties(typeDef) {
+
+		const properties = Object.keys(typeDef).filter(
+			(property) => {
+				return !property.startsWith("__");
+			}			
+		);
+		return properties;
+	}
+	// Verify that the type definition contains allthe required meta data properties
+	verifyTypeDef(typeDef) {
+
+		if(!typeDef.__name) Tracer.throw(Error(`property __name in typeDef missing`));
+		if(!typeDef.__collectionName) Tracer.throw(Error(`property __collectionName in typeDef ${typeDef.__name} missing`));
+	}
+	// Verify that document doc match the type definition
+	verifyType(typeDef, doc, throwEx = true) {
+
+		this.verifyTypeDef(typeDef);
 		Tracer.log(`verifyType ${typeDef.__name}`);
 		let r = true;
-		Object.keys(typeDef).forEach((property) => {
+		this.getTypeDefProperties(typeDef).forEach((property) => {
 
-			if(!property.startsWith("__")) {
-				const expectedType = typeDef[property];
-				const actualType = this.getType(obj[property]);
-				if(expectedType !== actualType) {
-					const errMsg = `TypeUtil.verifyType error on property:${property}, expectedType:${expectedType}, actualType:${actualType}`;
-					console.error(errMsg);
-					r = false;
-					if(throwEx)
-						Tracer.throwEx(errMsg);
-				}
+			const expectedType = typeDef[property];
+			const actualType = this.getType(doc[property]);
+			if(expectedType !== actualType) {
+				const errMsg = `TypeUtil.verifyType error on property:${property}, expectedType:${expectedType}, actualType:${actualType}`;
+				r = false;
+				if(throwEx)
+					Tracer.throwEx(errMsg);
 			}
 		});
 		return r;
+	}
+	createFromProps(typeDef, props, otherProps) {
+
+		let newDoc = {};
+		// get the list of property from the typeDef and copy the name/value
+		// from the props into a new document. Then add otherProps
+		this.getTypeDefProperties(typeDef).forEach((property) => {
+
+			const actualValue = props[property];
+			newDoc[property] = actualValue;
+		});
+		newDoc = { ...newDoc, ...otherProps};
+		return newDoc;
 	}
 }
 

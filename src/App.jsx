@@ -6,7 +6,7 @@ const App = () => (
     <BrowserRouter>
           <main className="container">
               <div>
-                  <h1>ToDo App with Firebase</h1>
+                  <h2>Multi Users ToDo App with Firebase</h2>
               </div>
               {/* <ul className="left">
                   <li>

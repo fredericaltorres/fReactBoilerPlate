@@ -8,7 +8,6 @@ import firestoreManager from '../common/FirestoreManager';
 import ComponentUtil from '../common/ComponentUtil';
 import { ESCAPE_KEY, ENTER_KEY } from '../common/ComponentUtil';
 import ToDo from './todo';
-import { TODO_ITEMS_COLLECTION_NAME } from './todo';
 import Tracer from "../common/Tracer";
 
 const USER_NOTIFICATION_COLLECTION_NAME = 'userNotifications';
@@ -41,9 +40,9 @@ class TodoItems extends React.PureComponent {
 	monitorToDoItemsCollection() {
 
 		firestoreManager.monitorQuery(
-			TODO_ITEMS_COLLECTION_NAME,
+			ToDo.getCollectionName(),
 			(records) => { 
-				Tracer.log(`collection ${TODO_ITEMS_COLLECTION_NAME} change detected`);
+				Tracer.log(`collection ${ToDo.getCollectionName()} change detected`);
 				ComponentUtil.forceRefresh(this, { todoItems: records, isLoading: false } ); 
 			}, 
 			'createdAt', this.state.todoOrderDirection
@@ -51,7 +50,7 @@ class TodoItems extends React.PureComponent {
 	}
 	stopMonitorToDoItemsCollection() {
 
-		firestoreManager.stopMonitorQuery(TODO_ITEMS_COLLECTION_NAME);
+		firestoreManager.stopMonitorQuery(ToDo.getCollectionName());
 	}
 	componentDidMount() {
 		
@@ -146,10 +145,11 @@ class TodoItems extends React.PureComponent {
 					ToDo.add(ToDo.create(`To do ${i} . . .`, maxOrder + i ));
 				}
 				return firestoreManager.commitBatch(batch);
+			},
+			() => {
+				this.monitorToDoItemsCollection();
 			}
-		).then(() => {
-			this.monitorToDoItemsCollection();
-		});
+		);
 	}
 	
 	// --- Jsx Generation ---
@@ -298,10 +298,12 @@ class TodoItems extends React.PureComponent {
 				</div>
 
 				<small>
-				{/* timeStamp: {this.state.timeStamp} <br/> */}
-				MaxOrder: { ToDo.getMaxOrder(this.state.todoItems)}
-				&nbsp; -- 
-				Logged on user: {firestoreManager.getCurrentUser() ? firestoreManager.getCurrentUser().displayName: 'None'}
+					{/* timeStamp: {this.state.timeStamp} <br/> */}
+					{/* MaxOrder: { ToDo.getMaxOrder(this.state.todoItems)} */}
+					{/* &nbsp; --  */}
+					Logged on user: {firestoreManager.getCurrentUser() ? firestoreManager.getCurrentUser().displayName: 'None'}<br/>
+					Try	the app from 2 different browsers.<br/>
+					<a target="top" href="https://github.com/fredericaltorres/fReactBoilerPlate">Source Code</a>
 				</small>
 			</div>
 		); 

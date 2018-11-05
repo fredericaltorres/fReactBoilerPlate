@@ -1,5 +1,6 @@
 import React from "react";
 import TypeUtil from './TypeUtil';
+import Tracer from './Tracer';
 
 export const ESCAPE_KEY = 27;
 export const ENTER_KEY  = 13;
@@ -18,7 +19,8 @@ class ComponentUtil  {
 			reactComponent.setState(newState);
 	}
 	static setIsLoading(reactComponent, state) {
-		console.log(`setIsLoading : ${state}`);
+		
+		Tracer.log(`setIsLoading: ${state}`);
 		ComponentUtil.forceRefresh(reactComponent, { isLoading: state });
 	}
 	// static executeAsBusy__(reactComponent, func) {
