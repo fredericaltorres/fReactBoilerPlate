@@ -23,6 +23,7 @@ import ComponentUtil from './ComponentUtil';
 
 const DEFAULT_MAX_RECORD = 400;
 const DEFAULT_ID_FIELD_NAME = "id";
+const UPDATE_AT_PROPERTY_NAME = "updatedAt";
 
 const getSettings = () => {
 
@@ -195,6 +196,10 @@ class FirestoreManager {
 	}
 	// https://firebase.google.com/docs/database/web/read-and-write
 	updateRecord(collection, oData, idFieldName = DEFAULT_ID_FIELD_NAME, overWriteDoc = true) {
+		
+		// Update property updateAt if exist
+		if(oData[UPDATE_AT_PROPERTY_NAME])
+			oData[UPDATE_AT_PROPERTY_NAME] = this.now();
 
 		// Duplicate the object for now, trying to removed and add the
 		// id property created some problems

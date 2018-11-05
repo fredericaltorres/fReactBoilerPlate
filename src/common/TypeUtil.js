@@ -1,5 +1,7 @@
 import Tracer from './Tracer';
 
+export const FIRESTORE_TIMESTAMP = 'Firestore.Timestamp';
+
 class TypeUtil {
 	
 	getType (v) {
@@ -65,12 +67,25 @@ class TypeUtil {
 		this.getTypeDefProperties(typeDef).forEach((property) => {
 
 			const expectedType = typeDef[property];
-			const actualType = this.getType(doc[property]);
-			if(expectedType !== actualType) {
-				const errMsg = `TypeUtil.verifyType error on property:${property}, expectedType:${expectedType}, actualType:${actualType}`;
-				r = false;
-				if(throwEx)
-					Tracer.throwEx(errMsg);
+			const actualValue = doc[property];
+			const actualType = this.getType(actualValue);
+
+			if(expectedType === FIRESTORE_TIMESTAMP) {
+
+				if(!(this.isNumber(actualValue.nanoseconds) && this.isNumber(actualValue.seconds))) {
+					//nanoseconds: 661000000, seconds: 1541389535
+					const errMsg = `TypeUtil.verifyType error on property:${property}, expectedType:${expectedType}, actualType:${actualType}`;
+					r = false;
+					if(throwEx) Tracer.throwEx(errMsg);
+				}				
+			}
+			else {
+
+				if(expectedType !== actualType) {
+					const errMsg = `TypeUtil.verifyType error on property:${property}, expectedType:${expectedType}, actualType:${actualType}`;
+					r = false;
+					if(throwEx) Tracer.throwEx(errMsg);
+				}
 			}
 		});
 		return r;

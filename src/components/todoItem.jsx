@@ -14,6 +14,7 @@ class TodoItem extends React.PureComponent {
 		id 				: PropTypes.string.isRequired,
 		isCompleted 	: PropTypes.bool.isRequired,
 		createdAt 		: PropTypes.object.isRequired,
+		updatedAt 		: PropTypes.object.isRequired,
 		showDate		: PropTypes.bool.isRequired,
 		order			: PropTypes.number.isRequired,
 		updateToDo		: PropTypes.func.isRequired,

@@ -5,52 +5,45 @@ import { FIRESTORE_TIMESTAMP } from '../common/TypeUtil';
 import Tracer from '../common/Tracer';
 import { FireStoreDocumentBaseClass}  from '../common/FireStoreDocumentBaseClass';
 
-
-// ToDo Type Definition
+// TestPlan Type Definition
 export const TypeDef = {
 
-	__name: 		'ToDo',
-	__collectionName:'todoItems',
+	__name: 		'TestPlan',
+	__collectionName:'testPlans',
 
 	id:				'String',
+	name:			'String',
 	description:	'String',
-	isCompleted: 	'Boolean',
+	author:			'String',
 	createdAt: 		FIRESTORE_TIMESTAMP,
 	updatedAt: 		FIRESTORE_TIMESTAMP,
-	order: 			'Number',
 }
 
 // This class allow to add, update, delete document of the type definition ToDo.
 // This class or the instance of this class is not the document created, updated or deleted. 
-export class ToDo extends FireStoreDocumentBaseClass {
+export class TestPlan extends FireStoreDocumentBaseClass {
 
 	constructor() {
 
 		super(TypeDef);
-		this.name = 'ToDo';
+		this.name = 'TestPlan';
 		Tracer.log(`constructor`, this);
 	}
-	create(description, order) {
+	create(name, description, author) {
+
+		const id = ComponentUtil.getNewUniqueId(); // Do not prefix the id with the name of the collection, firebase does not like it
+		if(name === null)
+			name = `Name ${id}`;
 
 		const doc = {
-			id: ComponentUtil.getNewUniqueId(), // Do not prefix the id with the name of the collection, firebase does not like it
+			id,
+			name,
 			description,
-			isCompleted: false,
+			author,
 			createdAt: firestoreManager.now(),
 			updatedAt: firestoreManager.now(),
-			order,
-		};
+		}
 		return doc;
 	}	
-
-	getMaxOrder = (todoItems) => {
-
-		let maxOrder = 0;
-		todoItems.forEach((todo) => {
-			if(todo.order > maxOrder)
-				maxOrder = todo.order;
-		});
-		return maxOrder;
-	}
 };
-export default new ToDo();
+export default new TestPlan();

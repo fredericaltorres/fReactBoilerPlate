@@ -8,6 +8,7 @@ import firestoreManager from '../common/FirestoreManager';
 import ComponentUtil from '../common/ComponentUtil';
 import { ESCAPE_KEY, ENTER_KEY } from '../common/ComponentUtil';
 import ToDo from './todo';
+import TestPlan from './testPlan';
 import Tracer from "../common/Tracer";
 
 const USER_NOTIFICATION_COLLECTION_NAME = 'userNotifications';
@@ -150,6 +151,7 @@ class TodoItems extends React.PureComponent {
 				this.monitorToDoItemsCollection();
 			}
 		);
+		TestPlan.add(TestPlan.create(null, 'test plan description', 'author'));
 	}
 	
 	// --- Jsx Generation ---
@@ -195,7 +197,8 @@ class TodoItems extends React.PureComponent {
 			id={todoItem.id}
 			order={todoItem.order}
 			createdAt={todoItem.createdAt}
-			description={todoItem.description} 
+			updatedAt={todoItem.createdAt}
+			description={todoItem.description}
 			isCompleted={todoItem.isCompleted}
 			key={todoItem.id}
 			updateToDo={ToDo.update}

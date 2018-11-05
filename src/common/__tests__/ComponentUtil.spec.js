@@ -1,5 +1,5 @@
-import ComponentUtil from './ComponentUtil'
-import TypeUtil from './TypeUtil'
+import ComponentUtil from '../ComponentUtil'
+import TypeUtil from '../TypeUtil'
 
 const ReactComponentMock = function() {
 

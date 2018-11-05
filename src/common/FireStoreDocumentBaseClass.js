@@ -21,6 +21,11 @@ export class FireStoreDocumentBaseClass {
 
 		TypeUtil.verifyType(this._typeDef, doc);
 	}
+	createFromProps(props, otherProps) {
+
+		const doc = TypeUtil.createFromProps(this._typeDef, props, otherProps);
+		return doc;
+	}
 	// If executed in non batch mode return a promise
 	update = (doc) => {
 
