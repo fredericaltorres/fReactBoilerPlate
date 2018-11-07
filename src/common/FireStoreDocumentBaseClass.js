@@ -1,6 +1,7 @@
 import firestoreManager from '../common/FirestoreManager';
 import ComponentUtil from '../common/ComponentUtil';
 import TypeUtil from '../common/TypeUtil';
+import TypeDefUtil from '../common/TypeDefUtil';
 import Tracer from '../common/Tracer';
 
 //////////////////////////////////////////////////////////
@@ -19,7 +20,7 @@ export class FireStoreDocumentBaseClass {
 	// Verify that the document doc match the type definition
 	verify(doc) {
 
-		TypeUtil.verifyType(this._typeDef, doc);
+		TypeDefUtil.verifyType(this._typeDef, doc);
 	}
 	createFromProps(props, otherProps) {
 

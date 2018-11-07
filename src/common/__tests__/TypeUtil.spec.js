@@ -1,4 +1,5 @@
 import TypeUtil from '../TypeUtil';
+import TypeDefUtil from '../TypeDefUtil';
 import { FIRESTORE_TIMESTAMP } from '../TypeUtil';
 
 describe('TypeUtil', () => {
@@ -39,7 +40,7 @@ describe('TypeUtil', () => {
 	].forEach(
 		({typeDef, actualObj}) => {
 			it(`verifyType typeDef:${JSON.stringify(typeDef)}`, () => {
-				expect(TypeUtil.verifyType(typeDef, actualObj, false)).toBe(true);
+				expect(TypeDefUtil.verifyType(typeDef, actualObj, false)).toBe(true);
 			});
 		}
 	);

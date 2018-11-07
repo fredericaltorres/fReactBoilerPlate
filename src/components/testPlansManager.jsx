@@ -2,13 +2,13 @@ import React from "react";
 import PropTypes from "prop-types";
 import tracer from '../common/Tracer';
 import Button from './Button';
+import { ESCAPE_KEY, ENTER_KEY } from '../common/ComponentUtil';
 import firestoreManager from '../common/FirestoreManager';
 import ComponentUtil from '../common/ComponentUtil';
-import ToDo from './todo';
 import TestPlan from './testPlan';
 import Tracer from "../common/Tracer";
 
-class TestPlans extends React.PureComponent {
+class TestPlansManager extends React.PureComponent {
 
 	static propTypes = {
 
@@ -16,14 +16,9 @@ class TestPlans extends React.PureComponent {
 	state = {
 
 		timeStamp: new Date().getTime(),
-		editText :'',
-		showDate : false,
-		mqttNewMessage : null,
 		isLoading: true,
-		testPlans: [
-			// { createdAt:"2018-10-09T19:41:59.272621Z", description:'Description 1', isCompleted: false, id:'1' },
-			// { createdAt:"2018-10-09T19:41:59.272621Z", description:'Description 2', isCompleted: false, id:'2' }
-		],
+		testPlansNameFilter :'',
+		testPlans: [],
 		testPlansOrderDirection: 'asc'
 	};
 	constructor(props) {
@@ -46,18 +41,23 @@ class TestPlans extends React.PureComponent {
 		// 	alert(JSON.stringify(doc));
 		// });
 
+		const $this = this;
+
 		firestoreManager.monitorQuery(
 			TestPlan.getCollectionName(),
 			(records) => { 
 				Tracer.log(`collection ${TestPlan.getCollectionName()} change detected`);
-				ComponentUtil.forceRefresh(this, { testPlans: records, isLoading: false } ); 
-			}, 
+				ComponentUtil.forceRefresh(this, { 
+					testPlans: TestPlan.filterByName(records, $this.state.testPlansNameFilter),
+					isLoading: false
+				});
+			},
 			'createdAt', this.state.testPlansOrderDirection
 		);
 	}
 	stopMonitorToDoItemsCollection() {
 
-		firestoreManager.stopMonitorQuery(ToDo.getCollectionName());
+		firestoreManager.stopMonitorQuery(TestPlan.getCollectionName());
 	}
 	componentDidMount() {
 		
@@ -71,7 +71,6 @@ class TestPlans extends React.PureComponent {
 	}
 
 	// --- Entity operations ---
-	
 	
 	generateData = () => {
 
@@ -92,8 +91,8 @@ class TestPlans extends React.PureComponent {
 				Tracer.log(`Creating ${max} test plans...`, this);
 				const batch = firestoreManager.startBatch();
 				for(let i = 0; i < max; i++) {
-					let r = Math.random().toString(36).substring(7);
-					TestPlan.add(TestPlan.create(`Test plan ${r} . . .`));
+					let r = ComponentUtil.getNewUniqueId();
+					TestPlan.add(TestPlan.create(`Test plan ${r} ...`));
 				}
 				return firestoreManager.commitBatch(batch);
 			},
@@ -102,19 +101,55 @@ class TestPlans extends React.PureComponent {
 			}
 		);
 	}
-	
+	handleSubmit = () => {
+
+		var filter = this.state.testPlansNameFilter.trim();
+		if(filter) {
+			alert(`Filter test plans on :${filter}`);
+		}
+	}
+	resetTestPlanFiltering(testPlansNameFilter) {
+
+		this.stopMonitorToDoItemsCollection();
+		Tracer.log(`Filter test plans on:'${testPlansNameFilter.toLowerCase()}'`);
+		ComponentUtil.forceRefresh(this, { testPlansNameFilter : testPlansNameFilter.toLowerCase() });
+		this.monitorToTestPlansCollection();
+	}
+	handleKeyDown = (event) => {
+
+		if (event.which === ESCAPE_KEY) {
+			this.resetTestPlanFiltering('');
+		}
+		// if (event.which === ENTER_KEY) 
+		// 	this.handleSubmit(event);
+	}
+	handleChange = (event) => {
+
+		this.resetTestPlanFiltering(event.target.value);
+	}
 	// --- Jsx Generation ---
 
 	getMainButtonsJsx = (isLoading, render = true) => {
 
 		if(!render) return null;
 
-		const message = isLoading ? "Busy . . . " : "Ready . . . ";
-		let className = isLoading ? "btn btn-outline-warning" : "btn btn-outline-primary";
-
 		return <div>
 
 			<div className="btn-group btn-group-sm" role="group" aria-label="Basic example">
+		
+				<input
+					disabled={this.props.isLoading} 
+					type="text"
+					className="form-control-sm mb-2 mr-sm-2" 
+					style={{width:'400px'}}
+					placeholder="Test Plan Filter" 
+					className="edit" 
+					value={this.state.testPlansNameFilter} 
+					onChange={this.props.isLoading ? () => {} : this.handleChange} 
+					onKeyDown={this.handleKeyDown}
+					ref={(input) => { this.testPlansNameFilterField = input; }} 
+				/> &nbsp;
+
 				<button type="button" className="btn btn-secondary">Add</button>
 				<button 
 					disabled={this.props.isLoading} 
@@ -124,13 +159,13 @@ class TestPlans extends React.PureComponent {
 			</div>
 		</div>;
 	}
-
-	deleteTestPlan(id) {
-		// No need to execute any syncronisation after the delete
-		// since we monitor the testPlans collection
-		TestPlan.delete(id);
+	deleteTestPlan(testPlan) {
+		
+		if(confirm(`Delete '${testPlan.name}' ?`)) {
+			// No need to execute any syncronisation after the delete since we monitor the testPlans collection
+			TestPlan.delete(testPlan.id);
+		}
 	}
-
 	renderTestPlanItemToJsx = (testPlan) => {
 		
 		return <li className="list-group-item" key={testPlan.id}>
@@ -147,7 +182,7 @@ class TestPlans extends React.PureComponent {
 						<button type="button" className="btn btn-secondary">Edit</button>
 						<button type="button" className="btn btn-secondary">Execute</button>
 						<button 
-							onClick={() => { this.deleteTestPlan(`${testPlan.id}`); }} 
+							onClick={() => { this.deleteTestPlan(testPlan); }} 
 							type="button" className="btn btn-secondary">Delete
 						</button>
 					</div>
@@ -189,11 +224,12 @@ class TestPlans extends React.PureComponent {
 
 				<small>
 					Logged on user: {firestoreManager.getCurrentUser() ? firestoreManager.getCurrentUser().displayName: 'None'}<br/>
-					Try	the app from 2 different browsers.<br/>
 					<a target="top" href="https://github.com/fredericaltorres/fReactBoilerPlate">Source Code</a>
 				</small>
+				{/* <br/>
+				timeStamp:{this.state.timeStamp} */}
 			</div>
 		); 
 	}
 }
-export default TestPlans;
+export default TestPlansManager;

@@ -134,6 +134,11 @@ class FirestoreManager {
 	__rebuildDocument(doc,  idFieldName = DEFAULT_ID_FIELD_NAME) {
 
 		const data = doc.data();
+		if(!data) {
+			Tracer.error(`__rebuildDocument doc.data() returned a undefined object`);
+			debugger;
+			return null;
+		}
 		data[idFieldName] = doc._key.toString();
 		return data;
 	}
@@ -160,7 +165,9 @@ class FirestoreManager {
 	} 
 	// https://firebase.google.com/docs/database/web/lists-of-data
 	// https://firebase.google.com/docs/firestore/query-data/listen
-	monitorQuery(collection, callBack, orderByColumn = null, orderDirection = 'desc', maxRecord = DEFAULT_MAX_RECORD) {
+	monitorQuery(collection, callBack, orderByColumn = null, orderDirection = 'desc', maxRecord = DEFAULT_MAX_RECORD
+			// , filterFunc = null
+		) {
 		
 		Tracer.log(`monitorQuery ${collection}, orderByColumn:${orderByColumn}/${orderDirection}, maxRecord:${maxRecord}`, this);
 		this.stopMonitorQuery(collection);
@@ -178,8 +185,11 @@ class FirestoreManager {
 		// Return a function handler that can unsubscribe the snapshot 
 		FirestoreManager._monitoredSnapshot[collection] = query.onSnapshot((querySnapshot) => {
 
-			const records = this.__rebuildDocuments(querySnapshot)
+			let records = this.__rebuildDocuments(querySnapshot)
 			try {
+				// if(filterFunc) {
+				// 	records = records.filter(filterFunc);
+				// }
 				if(callBack) callBack(records);
 			}
 			catch(ex) {
@@ -360,9 +370,7 @@ class FirestoreManager {
 	// https://firebase.google.com/docs/reference/js/firebase.firestore.Timestamp
 	formatTimestamp(timestamp, format = 'YYYY/MM/DD h:mm:ss a') {
 
-		const m = moment(timestamp.toDate());
-		const s = m.format(format);
-		return s;
+		return TypeUtil.formatFirebaseTimestamp(timestamp, format);
 	}
 	extractId(refId) {
 
