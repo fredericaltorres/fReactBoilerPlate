@@ -24,7 +24,7 @@ export class FireStoreDocumentBaseClass {
 	}
 	createFromProps(props, otherProps) {
 
-		const doc = TypeUtil.createFromProps(this._typeDef, props, otherProps);
+		const doc = TypeDefUtil.createFromProps(this._typeDef, props, otherProps);
 		return doc;
 	}
 	// If executed in non batch mode return a promise

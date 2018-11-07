@@ -20,7 +20,8 @@ class ComponentUtil  {
 	}
 	static setIsLoading(reactComponent, state) {
 		
-		Tracer.log(`setIsLoading: ${state}`);
+		console.log(`============ ${typeof(jest)}`);
+		Tracer.log(`setIsLoading: ${state}`); // TODO: Do not log when runnig 
 		ComponentUtil.forceRefresh(reactComponent, { isLoading: state });
 	}
 	// static executeAsBusy__(reactComponent, func) {

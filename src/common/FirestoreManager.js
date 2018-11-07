@@ -134,11 +134,8 @@ class FirestoreManager {
 	__rebuildDocument(doc,  idFieldName = DEFAULT_ID_FIELD_NAME) {
 
 		const data = doc.data();
-		if(!data) {
-			Tracer.error(`__rebuildDocument doc.data() returned a undefined object`);
-			debugger;
-			return null;
-		}
+		if(!data)
+			return null; // The document does not exist
 		data[idFieldName] = doc._key.toString();
 		return data;
 	}
@@ -206,7 +203,11 @@ class FirestoreManager {
 			const docRef = this.getCollection(collection).doc(documentId);
 			docRef.get().then(doc =>  {
 
-				const item = this.__rebuildDocument(doc)
+				const item = this.__rebuildDocument(doc);
+				if(item === null) {
+					Tracer.throw(`loadDocument(${collection}, ${documentId}) failed`);
+				}
+
 				if(TypeUtil.isArray(subCollections)) {  // Load sub collections
 
 					const promises = [];
