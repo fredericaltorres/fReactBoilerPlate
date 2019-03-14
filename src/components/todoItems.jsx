@@ -18,6 +18,7 @@ class TodoItems extends React.PureComponent {
 	static propTypes = {
 
 	};
+
 	state = {
 
 		timeStamp: new Date().getTime(),
@@ -32,12 +33,14 @@ class TodoItems extends React.PureComponent {
 		userNotifications:[],
 		todoOrderDirection: 'desc',
 	};
+
 	constructor(props) {
 
 		super(props);
 		this.name = "TodoItems";
 		tracer.log('constructor', this);
 	}
+
 	monitorToDoItemsCollection() {
 
 		// Load the testPlans and its steps
@@ -61,10 +64,12 @@ class TodoItems extends React.PureComponent {
 			'createdAt', this.state.todoOrderDirection
 		);
 	}
+
 	stopMonitorToDoItemsCollection() {
 
 		firestoreManager.stopMonitorQuery(ToDo.getCollectionName());
 	}
+
 	componentDidMount() {
 		
 		firestoreManager.monitorQuery(
@@ -85,6 +90,7 @@ class TodoItems extends React.PureComponent {
 	// 		}
 	// 	);
 	// }
+
 	googleLogin() {
 
 		firestoreManager.googleLogin();
@@ -111,14 +117,17 @@ class TodoItems extends React.PureComponent {
 			}
 		);
 	}
+
 	markAllAsDone = () => {
 
 		this.markAllAsCompleted(true);
 	}
+	
 	markAllAsNotDone = () => {
 
 		this.markAllAsCompleted(false);
 	}
+
 	deleteAll = () => {
 
 		this.stopMonitorToDoItemsCollection();
@@ -135,6 +144,7 @@ class TodoItems extends React.PureComponent {
 			}
 		);
 	}
+
 	generateData = () => {
 
 		const maxDefaultValue = 10;
@@ -172,8 +182,8 @@ class TodoItems extends React.PureComponent {
 
 		if(!render) return null;
 
-		const message = isLoading ? "Busy . . . " : "Ready . . . ";
-		let className = isLoading ? "btn btn-outline-warning" : "btn btn-outline-primary";
+		// const message = isLoading ? "Busy . . . " : "Ready . . . ";
+		// let className = isLoading ? "btn btn-outline-warning" : "btn btn-outline-primary";
 
 		return <div>
 			<Button isLoading={isLoading} text="Add" onClick={this.handleSubmit} />
@@ -203,6 +213,7 @@ class TodoItems extends React.PureComponent {
 			/>
 		</div>;
 	}
+
 	renderToDoItemToJsx = (todoItem) => {
 
 		return <TodoItem 
@@ -218,12 +229,14 @@ class TodoItems extends React.PureComponent {
 			showDate={this.state.showDate}
 		/>;
 	}
+
 	renderToDoItemsToJsx = (todoItems) => {
 
 		return todoItems.map((todoItem) => {
 			return this.renderToDoItemToJsx(todoItem);
 		});
 	}    
+
 	renderUserNotification = () => {
 
 		if(this.state.userNotifications.length === 0) {
@@ -238,18 +251,21 @@ class TodoItems extends React.PureComponent {
 
 	// --- Misc Events ---
 
-    onShowDateCheckboxClick = (e) => {
+	onShowDateCheckboxClick = (e) => {
 
 		ComponentUtil.forceRefresh(this, { showDate: e.target.checked });
 	}
+
 	clearDescriptionToDoTextBox() {
 
 		ComponentUtil.forceRefresh(this, { editText : '' });
 	}
+
 	handleChange = (event) => {
 
 		ComponentUtil.forceRefresh(this, { editText : event.target.value });
 	}
+
 	handleSubmit = () => {
 
 		var description = this.state.editText.trim();
@@ -258,8 +274,8 @@ class TodoItems extends React.PureComponent {
 			.then(() => {
 				this.clearDescriptionToDoTextBox();
 			});
-			
 	}
+
 	handleKeyDown = (event) => {
 
 		if (event.which === ESCAPE_KEY) {
@@ -268,6 +284,7 @@ class TodoItems extends React.PureComponent {
 		else if (event.which === ENTER_KEY) 
 			this.handleSubmit(event);
 	}
+
 	revertToDoItemsSortOrder = () => {
 		
 		ComponentUtil.forceRefresh(this, { 
@@ -276,6 +293,7 @@ class TodoItems extends React.PureComponent {
 		});
 		this.monitorToDoItemsCollection();
 	}
+
 	render() {
 
 		Tracer.log(`render isLoading:${this.state.isLoading}`, this);
@@ -319,7 +337,7 @@ class TodoItems extends React.PureComponent {
 					{/* MaxOrder: { ToDo.getMaxOrder(this.state.todoItems)} */}
 					{/* &nbsp; --  */}
 					Logged on user: {firestoreManager.getCurrentUser() ? firestoreManager.getCurrentUser().displayName: 'None'}<br/>
-					Try	the app from 2 different browsers.<br/>
+					Try	the app from 2 different browsers at the same time.<br/>
 					<a target="top" href="https://github.com/fredericaltorres/fReactBoilerPlate">Source Code</a>
 				</small>
 			</div>

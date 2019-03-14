@@ -22,6 +22,8 @@ import moment from "moment"; // http://momentjs.com/
 import FirestoreManagerConfig from './FirestoreManagerConfig';
 import ComponentUtil from './ComponentUtil';
 import TypeUtil from './TypeUtil';
+import TypeDefUtil from './TypeDefUtil';
+
 
 const DEFAULT_MAX_RECORD = 400;
 const DEFAULT_ID_FIELD_NAME = "id";
@@ -56,9 +58,9 @@ class FirestoreManager {
 			firebase.initializeApp(FirestoreManagerConfig);
 			FirestoreManager._initialized = true;
 			this.__setUpOnAuthStateChanged();
-			
 		}
 	}
+
 	__setUpOnAuthStateChanged () {
 
 		firebase.auth().onAuthStateChanged((user) => {
@@ -78,10 +80,12 @@ class FirestoreManager {
 			}
 		});
 	}
+
 	getCurrentUser() {
 
 		return firebase.auth().currentUser;
 	}
+
 	// https://firebase.google.com/docs/auth/web/manage-users?authuser=0
 	googleLogin() {
 
@@ -95,6 +99,7 @@ class FirestoreManager {
 				Tracer.error(error, this);
 			});
 	}
+
 	getFirestoreDB() {
 
 		if(this._firestoreDb) 
@@ -105,20 +110,24 @@ class FirestoreManager {
 		this._firestoreDb = firestore;
 		return this._firestoreDb;
 	}
+
 	getStorageRef() {
 
 		return firebase.storage().ref();
 	}
+
 	getCollection(name) {
 
 		return this.getFirestoreDB().collection(name);
 	}
+
 	startBatch() {
 		
 		Tracer.log(`startBatch`, this);
 		this.batchModeOn = true;
 		return this.getFirestoreDB().batch();
 	}
+
 	commitBatch(batch) {
 
 		Tracer.log(`commitBatch`, this);
@@ -126,11 +135,13 @@ class FirestoreManager {
 		this.batchModeOn = false;
 		return batch.commit();
 	}
+
 	showErrorToUser(msg) {
 
 		Tracer.error(msg, this);
 		alert(`ERROR: ${msg}`);
 	}
+
 	__rebuildDocument(doc,  idFieldName = DEFAULT_ID_FIELD_NAME) {
 
 		const data = doc.data();
@@ -139,6 +150,7 @@ class FirestoreManager {
 		data[idFieldName] = doc._key.toString();
 		return data;
 	}
+
 	__rebuildDocuments(documents) {
 
 		const records = [];
@@ -147,10 +159,12 @@ class FirestoreManager {
 		});
 		return records;
 	}
+
 	__unsubscribeMonitoredSnapshot(unsubscribe) {
 
 		unsubscribe();
 	}
+
 	stopMonitorQuery(collection) {
 		
 		if(FirestoreManager._monitoredSnapshot[collection]) {
@@ -160,6 +174,7 @@ class FirestoreManager {
 			delete FirestoreManager._monitoredSnapshot[collection];
 		}
 	} 
+
 	// https://firebase.google.com/docs/database/web/lists-of-data
 	// https://firebase.google.com/docs/firestore/query-data/listen
 	monitorQuery(collection, callBack, orderByColumn = null, orderDirection = 'desc', maxRecord = DEFAULT_MAX_RECORD
@@ -195,13 +210,14 @@ class FirestoreManager {
 		});
 		return true;
 	}
+
 	loadDocument(collection, documentId, subCollections = null) {
 
 		Tracer.log(`loadDocument(${collection}, ${documentId})`, this);
 		return new Promise((resolve, reject) => {
 			
 			const docRef = this.getCollection(collection).doc(documentId);
-			docRef.get().then(doc =>  {
+			docRef.get().then(doc => {
 
 				const item = this.__rebuildDocument(doc);
 				if(item === null) {
@@ -235,6 +251,7 @@ class FirestoreManager {
 			});
 		});
 	}
+
 	loadDocuments(collection, orderByColumn = null, orderDirection = 'desc', maxRecord = DEFAULT_MAX_RECORD, nameResult = null) {
 
 		Tracer.log(`loadDocuments(${collection}, ${orderByColumn}, ${orderDirection}, ${maxRecord})`, this);
@@ -261,6 +278,7 @@ class FirestoreManager {
 			});
 		});
 	}
+
 	// https://firebase.google.com/docs/database/web/read-and-write
 	updateRecord(collection, oData, idFieldName = DEFAULT_ID_FIELD_NAME, overWriteDoc = true) {
 		
@@ -303,6 +321,7 @@ class FirestoreManager {
 			});
 		}
 	}
+
 	// https://firebase.google.com/docs/firestore/manage-data/delete-data
 	deleteRecord(collection, id) {
 
@@ -333,6 +352,7 @@ class FirestoreManager {
 			});			
 		}
 	}
+
 	// https://firebase.google.com/docs/firestore/manage-data/add-data
 	// https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes
 	addRecord(collection, data, idFieldName = DEFAULT_ID_FIELD_NAME) {
@@ -368,11 +388,13 @@ class FirestoreManager {
 			});
 		}
 	};
+
 	// https://firebase.google.com/docs/reference/js/firebase.firestore.Timestamp
 	formatTimestamp(timestamp, format = 'YYYY/MM/DD h:mm:ss a') {
 
-		return TypeUtil.formatFirebaseTimestamp(timestamp, format);
+		return TypeDefUtil.formatFirebaseTimestamp(timestamp, format);
 	}
+
 	extractId(refId) {
 
 		const parts = refId.split('/');
@@ -381,14 +403,17 @@ class FirestoreManager {
 		}
 		return refId;
 	}
+
 	now() {
 
 		return firebase.firestore.Timestamp.now();
 	}
+
 	invertOrderDirection(d) {
 
 		return d === 'desc' ? 'asc' : 'desc';
 	}
+
 	orderDirectionIcon(d) {
 		return d === 'desc' ? "D" : "A";
 	}

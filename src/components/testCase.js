@@ -8,14 +8,14 @@ import { FireStoreDocumentBaseClass}  from '../common/FireStoreDocumentBaseClass
 // TestPlan Type Definition
 export const TypeDef = {
 
-	__name: 		'TestCase',
-	__collectionName:'', // stored in parent object
+	__name: 			'TestCase',
+	__collectionName:	'', // stored in parent object
 
-	id:				'String',
-	name:			'String',
-	description:	'String',
-	createdAt: 		FIRESTORE_TIMESTAMP,
-	updatedAt: 		FIRESTORE_TIMESTAMP,
+	id:					'String',
+	name:				'String',
+	description:		'String',
+	createdAt:			FIRESTORE_TIMESTAMP,
+	updatedAt:			FIRESTORE_TIMESTAMP,
 }
 
 // This class allow to add, update, delete document of the type definition ToDo.
@@ -50,15 +50,15 @@ export class TestCase extends FireStoreDocumentBaseClass {
 // TestPlan Type Definition
 export const TypeDef = {
 
-	__name: 		'TestPlan',
-	__collectionName:'testPlans',
+	__name: 			'TestPlan',
+	__collectionName:	'testPlans',
 
-	id:				'String',
-	name:			'String',
-	description:	'String',
-	author:			'String',
-	createdAt: 		FIRESTORE_TIMESTAMP,
-	updatedAt: 		FIRESTORE_TIMESTAMP,
+	id:					'String',
+	name:				'String',
+	description:		'String',
+	author:				'String',
+	createdAt:			FIRESTORE_TIMESTAMP,
+	updatedAt:			FIRESTORE_TIMESTAMP,
 }
 
 

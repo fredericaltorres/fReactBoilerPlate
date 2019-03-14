@@ -20,20 +20,24 @@ class TodoItem extends React.PureComponent {
 		updateToDo		: PropTypes.func.isRequired,
 		deleteToDo		: PropTypes.func.isRequired,
 	};
+
 	onDeleteClick = () => {
 		
 		this.props.deleteToDo(this.props.id);
 	}
+	
 	onCheckClick = (e) => {
 
 		const isCompleted = e.target.checked;	
 		const todo = ToDo.createFromProps(this.props, { isCompleted });
 		this.props.updateToDo(todo);
 	}	
+
 	getDay (createdTime) {
 
 		return firestoreManager.formatTimestamp(createdTime)
 	}
+
 	getCreatedTimeJsx() {
 
 		if(this.props.showDate){
@@ -52,6 +56,7 @@ class TodoItem extends React.PureComponent {
 		}
 		else return null;
 	}
+
 	render() {
 
 		return (

@@ -8,15 +8,15 @@ import { FireStoreDocumentBaseClass}  from '../common/FireStoreDocumentBaseClass
 // TestPlan Type Definition
 export const TypeDef = {
 
-	__name: 		 'TestPlan',
-	__collectionName:'testPlans',
+	__name:				'TestPlan',
+	__collectionName:	'testPlans',
 
-	id:				 'String',
-	name:			 'String',
-	description:	 'String',
-	author:			 'String',
-	createdAt: 		 FIRESTORE_TIMESTAMP,
-	updatedAt: 		 FIRESTORE_TIMESTAMP,
+	id:					'String',
+	name:				'String',
+	description:		'String',
+	author:				'String',
+	createdAt:			FIRESTORE_TIMESTAMP,
+	updatedAt:			FIRESTORE_TIMESTAMP,
 }
 
 // This class allow to add, update, delete document of the type definition ToDo.
@@ -53,7 +53,7 @@ export class TestPlan extends FireStoreDocumentBaseClass {
 		return testPlans.filter(
 
 			(testPlan) => {
-				if(testPlansNameFilter === '') return true;
+				if(!testPlansNameFilter) return true;
 				return testPlan.name.toLowerCase().indexOf(testPlansNameFilter) !== -1;
 			}
 		);
