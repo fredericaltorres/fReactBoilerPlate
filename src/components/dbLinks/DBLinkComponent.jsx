@@ -20,7 +20,7 @@ class DBLinkComponent extends React.PureComponent {
 		// updatedAt 	: PropTypes.object.isRequired,
 		
 		// updateToDo	: PropTypes.func.isRequired,
-		// deleteToDo	: PropTypes.func.isRequired,
+		deleteDbLink	: PropTypes.func.isRequired,
 	};
 
 	state = {
@@ -39,7 +39,7 @@ class DBLinkComponent extends React.PureComponent {
 
 	onDeleteClick = () => {
 		
-		this.props.deleteToDo(this.props.dbLink.id);
+		this.props.deleteDbLink(this.props.dbLink.id);
 	}
 
 	onEditClick = () => {
@@ -54,8 +54,8 @@ class DBLinkComponent extends React.PureComponent {
 
 	onOpenClick = () => {
 		
-		Tracer.log(`Opening link ${this.state.editText}`);
-		window.open(this.state.editText, "_blank" );// "toolbar=yes,top=0,left=0,width=400,height=400"
+		Tracer.log(`Opening link ${this.getLink()}`);
+		window.open(this.getLink(), "_blank" );// "toolbar=yes,top=0,left=0,width=400,height=400"
 	}
 
 	handleChange = (event) => {

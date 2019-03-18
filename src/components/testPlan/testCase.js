@@ -6,7 +6,7 @@ import Tracer from '../../common/Tracer';
 import { FireStoreDocumentBaseClass}  from '../../common/FireStoreDocumentBaseClass';
 
 // TestPlan Type Definition
-export const TypeDef = {
+const TypeDef = {
 
 	__name: 			'TestCase',
 	__collectionName:	'', // stored in parent object
@@ -19,7 +19,6 @@ export const TypeDef = {
 }
 
 // This class allow to add, update, delete document of the type definition ToDo.
-// This class or the instance of this class is not the document created, updated or deleted. 
 export class TestCase extends FireStoreDocumentBaseClass {
 
 	constructor() {
@@ -48,7 +47,7 @@ export class TestCase extends FireStoreDocumentBaseClass {
 
 
 // TestPlan Type Definition
-export const TypeDef = {
+const TypeDef = {
 
 	__name: 			'TestPlan',
 	__collectionName:	'testPlans',

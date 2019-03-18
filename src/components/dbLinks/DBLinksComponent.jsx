@@ -55,18 +55,15 @@ class DBLinksComponent extends React.PureComponent {
 	
 	addLinks () {
 		const link = prompt('New link?', undefined);
-		const description = prompt('Description?', undefined);
-		debugger
-		DBLink.add(DBLink.create(link, description));
+		if(link !== null) {
+			const description = prompt('Description?', undefined);
+			DBLink.add(DBLink.create(link, description));
+		}
 	}
 
 	getAddButtonAlertJsx = (isLoading, render = true) => {
 
 		if(!render) return null;
-
-		// const message = isLoading ? "Busy . . . " : "Ready . . . ";
-		// let className = isLoading ? "btn btn-outline-warning" : "btn btn-outline-primary";
-
 		return <div>
 			<Button isLoading={isLoading} text="Add" onClick={this.addLinks} />
 		</div>;
@@ -77,8 +74,7 @@ class DBLinksComponent extends React.PureComponent {
 		return <DBLinkComponent 
 			dbLink={linkComponent}
 			key={linkComponent.id}
-			// updateToDo={ToDo.update}
-			// deleteToDo={ToDo.delete}
+			deleteDbLink={DBLink.delete}
 		/>;
 	}
 

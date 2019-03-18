@@ -5,7 +5,7 @@ import Tracer from '../../common/Tracer';
 import { FireStoreDocumentBaseClass}  from '../../common/FireStoreDocumentBaseClass';
 
 // ToDo Type Definition
-export const TypeDef = {
+const TypeDef = {
 
 	__name: 		'ToDo',
 	__collectionName:'todoItems',
@@ -19,7 +19,6 @@ export const TypeDef = {
 }
 
 // This class allow to add, update, delete document of the type definition ToDo.
-// This class or the instance of this class is not the document created, updated or deleted. 
 export class ToDo extends FireStoreDocumentBaseClass {
 
 	constructor() {

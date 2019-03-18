@@ -4,8 +4,8 @@ import { FIRESTORE_TIMESTAMP } from '../../common/TypeUtil';
 import Tracer from '../../common/Tracer';
 import { FireStoreDocumentBaseClass}  from '../../common/FireStoreDocumentBaseClass';
 
-// ToDo Type Definition
-export const TypeDef = {
+// DBLink Type Definition
+const TypeDef = {
 
 	__name: 		'DBLink',
 	__collectionName:'DBLinks',
@@ -17,8 +17,7 @@ export const TypeDef = {
 	updatedAt: 		FIRESTORE_TIMESTAMP,
 }
 
-// This class allow to add, update, delete document of the type definition ToDo.
-// This class or the instance of this class is not the document created, updated or deleted. 
+// This class allow to add, update, delete document of the type definition DBLink.
 export class DBLink extends FireStoreDocumentBaseClass {
 
 	constructor() {
