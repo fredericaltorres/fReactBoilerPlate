@@ -293,6 +293,7 @@ class FirestoreManager {
 		const idStringForTracing = `${idFieldName}:${longId}`;
 		Tracer.log(`updateRecord ${idStringForTracing}`, this);				
 		const id = this.extractId(longId);
+		data[DEFAULT_ID_FIELD_NAME] = id; // Remove the collection name from the id
 		// The id property is stored twice as the document key and as the property id
 		const docRef = this.getCollection(collection).doc(id); // Load the record
 
@@ -415,7 +416,7 @@ class FirestoreManager {
 	}
 
 	orderDirectionIcon(d) {
-		return d === 'desc' ? "D" : "A";
+		return d === 'desc' ? "[D]" : "[A]";
 	}
 }  
 

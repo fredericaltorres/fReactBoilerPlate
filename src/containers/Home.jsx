@@ -1,5 +1,5 @@
 import React from 'react';
-import TodoItems from '../components/todoItems';
+import TodoItems from '../components/todo/todoItems';
 
 const Home = () => (
   <div>

@@ -1,13 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
-import tracer from '../common/Tracer';
-import TypeUtil from '../common/TypeUtil';
-import TypeDefUtil from '../common/TypeDefUtil';
-import ComponentUtil from '../common/ComponentUtil';
-import firestoreManager from '../common/FirestoreManager';
+import tracer from '../../common/Tracer';
+import TypeUtil from '../../common/TypeUtil';
+import TypeDefUtil from '../../common/TypeDefUtil';
+import ComponentUtil from '../../common/ComponentUtil';
+import firestoreManager from '../../common/FirestoreManager';
 
 import TestPlan from './testPlan';
-import Tracer from "../common/Tracer";
+import Tracer from "../../common/Tracer";
 
 class testPlanDialog extends React.PureComponent {
 

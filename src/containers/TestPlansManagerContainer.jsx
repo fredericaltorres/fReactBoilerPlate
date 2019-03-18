@@ -1,5 +1,5 @@
 import React from 'react';
-import TestPlansManager from '../components/testPlansManager';
+import TestPlansManager from '../components/testPlan/testPlansManager';
 
 const TestPlansManagerContainer = () => (
   <div>

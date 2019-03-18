@@ -1,15 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
-import tracer from '../common/Tracer';
+import tracer from '../../common/Tracer';
 import TodoItem from './todoItem';
-import Button from './Button';
-import Checkbox from './Checkbox';
-import firestoreManager from '../common/FirestoreManager';
-import ComponentUtil from '../common/ComponentUtil';
-import { ESCAPE_KEY, ENTER_KEY } from '../common/ComponentUtil';
+import Button from '../Button';
+import Checkbox from '../Checkbox';
+import firestoreManager from '../../common/FirestoreManager';
+import ComponentUtil from '../../common/ComponentUtil';
+import { ESCAPE_KEY, ENTER_KEY } from '../../common/ComponentUtil';
 import ToDo from './todo';
-import TestPlan from './testPlan';
-import Tracer from "../common/Tracer";
+import Tracer from "../../common/Tracer";
 
 const USER_NOTIFICATION_COLLECTION_NAME = 'userNotifications';
 
@@ -42,19 +41,7 @@ class TodoItems extends React.PureComponent {
 	}
 
 	monitorToDoItemsCollection() {
-
-		// Load the testPlans and its steps
-		// firestoreManager.loadDocument('testPlans','829378c31320a', ['steps'])
-		// 	.then((doc) => {
-		// 		alert(JSON.stringify(doc));
-		// 	});
-
-		// // Load a specific TestPlan Step
-		// firestoreManager.loadDocument('testPlans/829378c31320a/steps','ITFC9eJd8U13AimEkon7')
-		// .then((doc) => {
-		// 	alert(JSON.stringify(doc));
-		// });
-
+		
 		firestoreManager.monitorQuery(
 			ToDo.getCollectionName(),
 			(records) => { 
@@ -74,11 +61,14 @@ class TodoItems extends React.PureComponent {
 		
 		firestoreManager.monitorQuery(
 			USER_NOTIFICATION_COLLECTION_NAME,
-			(records) => { ComponentUtil.forceRefresh(this, { userNotifications : records } ); }, 
+			(records) => { 
+				ComponentUtil.forceRefresh(this, { userNotifications : records } ); 
+			}, 
 			'timestamp' 
 		);	
 		this.monitorToDoItemsCollection();
 	}
+
 	// ___loadToDoItemsFromDatabase = () => {
 
 	// 	ComponentUtil.executeAsBusy(this,
@@ -173,7 +163,6 @@ class TodoItems extends React.PureComponent {
 				this.monitorToDoItemsCollection();
 			}
 		);
-		TestPlan.add(TestPlan.create(null, 'test plan description', 'author'));
 	}
 	
 	// --- Jsx Generation ---
@@ -287,11 +276,13 @@ class TodoItems extends React.PureComponent {
 
 	revertToDoItemsSortOrder = () => {
 		
-		ComponentUtil.forceRefresh(this, { 
+		const newState = { 
 			todoOrderDirection: firestoreManager.invertOrderDirection(this.state.todoOrderDirection), 
 			isLoading: true 
+		};
+		ComponentUtil.forceRefresh(this, newState, () => {
+			this.monitorToDoItemsCollection();
 		});
-		this.monitorToDoItemsCollection();
 	}
 
 	render() {

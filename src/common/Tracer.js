@@ -1,3 +1,4 @@
+// This color console log mode does not work in IE 11
 class Tracer {
 
 	constructor() {

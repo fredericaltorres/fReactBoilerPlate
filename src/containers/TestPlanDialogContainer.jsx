@@ -1,5 +1,5 @@
 import React from 'react';
-import TestPlanDialog from '../components/testPlanDialog';
+import TestPlanDialog from '../components/testPlan/testPlanDialog';
 
 const TestPlanDialogContainer = () => (
   <div>

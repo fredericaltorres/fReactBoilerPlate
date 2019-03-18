@@ -36,6 +36,8 @@ export default {
     }
 }
 
+# https://todo-firebase.scm.azurewebsites.net
+
 $baseApiUrl = "https://$webAppName.scm.azurewebsites.net/api"
 $outputFile = ".\out.txt"
 

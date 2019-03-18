@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
-import tracer from '../common/Tracer';
-import firestoreManager from "../common/FirestoreManager";
+import tracer from '../../common/Tracer';
+import firestoreManager from "../../common/FirestoreManager";
 import ToDo from './todo';
 
 const isMobile = false;
@@ -10,15 +10,15 @@ class TodoItem extends React.PureComponent {
 
 	static propTypes = {		
 
-		description 	: PropTypes.string,
-		id 				: PropTypes.string.isRequired,
-		isCompleted 	: PropTypes.bool.isRequired,
-		createdAt 		: PropTypes.object.isRequired,
-		updatedAt 		: PropTypes.object.isRequired,
-		showDate		: PropTypes.bool.isRequired,
-		order			: PropTypes.number.isRequired,
-		updateToDo		: PropTypes.func.isRequired,
-		deleteToDo		: PropTypes.func.isRequired,
+		description : PropTypes.string,
+		id 			: PropTypes.string.isRequired,
+		isCompleted : PropTypes.bool.isRequired,
+		createdAt 	: PropTypes.object.isRequired,
+		updatedAt 	: PropTypes.object.isRequired,
+		showDate	: PropTypes.bool.isRequired,
+		order		: PropTypes.number.isRequired,
+		updateToDo	: PropTypes.func.isRequired,
+		deleteToDo	: PropTypes.func.isRequired,
 	};
 
 	onDeleteClick = () => {

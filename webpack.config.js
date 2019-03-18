@@ -4,11 +4,18 @@ const HTMLWebpackPlugin = require('html-webpack-plugin');
 
 const dev = process.env.NODE_ENV !== 'production';
 
-console.log(`ENVIRONMENT:${process.env.NODE_ENV} ========= `);
+console.log(`webpack.config.js >>`);
+console.log(`ENVIRONMENT:${process.env.NODE_ENV}`);
 
 const HTMLWebpackPluginConfig = new HTMLWebpackPlugin({
   template: path.join(__dirname, '/src/index.html'),
   filename: 'index.html',
+  inject: 'body',
+});
+
+const WebConfigWebpackPluginConfig = new HTMLWebpackPlugin({
+  template: path.join(__dirname, '/src/web.config'),
+  filename: 'web.config',
   inject: 'body',
 });
 
@@ -62,6 +69,7 @@ module.exports = {
     ]
     : [
         HTMLWebpackPluginConfig, 
-        DefinePluginConfig
+        DefinePluginConfig,
+        // WebConfigWebpackPluginConfig
       ],
 };

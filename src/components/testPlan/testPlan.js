@@ -1,9 +1,9 @@
-import firestoreManager from '../common/FirestoreManager';
-import ComponentUtil from '../common/ComponentUtil';
-import TypeUtil from '../common/TypeUtil';
-import { FIRESTORE_TIMESTAMP } from '../common/TypeUtil';
-import Tracer from '../common/Tracer';
-import { FireStoreDocumentBaseClass}  from '../common/FireStoreDocumentBaseClass';
+import firestoreManager from '../../common/FirestoreManager';
+import ComponentUtil from '../../common/ComponentUtil';
+import TypeUtil from '../../common/TypeUtil';
+import { FIRESTORE_TIMESTAMP } from '../../common/TypeUtil';
+import Tracer from '../../common/Tracer';
+import { FireStoreDocumentBaseClass}  from '../../common/FireStoreDocumentBaseClass';
 
 // TestPlan Type Definition
 export const TypeDef = {

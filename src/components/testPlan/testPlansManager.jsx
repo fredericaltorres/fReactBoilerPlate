@@ -1,12 +1,12 @@
 import React from "react";
 import PropTypes from "prop-types";
-import tracer from '../common/Tracer';
-import Button from './Button';
-import { ESCAPE_KEY, ENTER_KEY } from '../common/ComponentUtil';
-import firestoreManager from '../common/FirestoreManager';
-import ComponentUtil from '../common/ComponentUtil';
+import tracer from '../../common/Tracer';
+import Button from '../Button';
+import { ESCAPE_KEY, ENTER_KEY } from '../../common/ComponentUtil';
+import firestoreManager from '../../common/FirestoreManager';
+import ComponentUtil from '../../common/ComponentUtil';
 import TestPlan from './testPlan';
-import Tracer from "../common/Tracer";
+import Tracer from "../../common/Tracer";
 
 class TestPlansManager extends React.PureComponent {
 
