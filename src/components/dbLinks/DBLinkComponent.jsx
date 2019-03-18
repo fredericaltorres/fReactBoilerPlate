@@ -12,14 +12,7 @@ class DBLinkComponent extends React.PureComponent {
 
 	static propTypes = {		
 
-		dbLink : PropTypes.object,
-		// description : PropTypes.string,
-		// link 		: PropTypes.string,
-		// id 			: PropTypes.string.isRequired,
-		// createdAt 	: PropTypes.object.isRequired,
-		// updatedAt 	: PropTypes.object.isRequired,
-		
-		// updateToDo	: PropTypes.func.isRequired,
+		dbLink : DBLink.shape(),
 		deleteDbLink	: PropTypes.func.isRequired,
 	};
 

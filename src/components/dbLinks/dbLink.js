@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import firestoreManager from '../../common/FirestoreManager';
 import ComponentUtil from '../../common/ComponentUtil';
 import { FIRESTORE_TIMESTAMP } from '../../common/TypeUtil';
@@ -37,5 +38,14 @@ export class DBLink extends FireStoreDocumentBaseClass {
 		};
 		return doc;
 	}	
+	shape() {
+		return PropTypes.shape({
+			id: PropTypes.string.isRequired,
+			link: PropTypes.string.isRequired,
+			description: PropTypes.string.isRequired,
+			createdAt: PropTypes.object.isRequired,
+			updatedAt: PropTypes.object.isRequired,
+		});
+	}
 };
 export default new DBLink();
