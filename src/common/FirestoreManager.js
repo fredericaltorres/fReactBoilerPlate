@@ -86,6 +86,29 @@ class FirestoreManager {
 		return firebase.auth().currentUser;
 	}
 
+	getCurrentUserUID() {
+
+		return this.__getCurrentUserProperty("uid");
+	}
+
+	getCurrentUserDisplayName() {
+
+		return this.__getCurrentUserProperty("displayName");
+	}
+
+	getCurrentUserEmail() {
+
+		return this.__getCurrentUserProperty("email");
+	}
+
+	__getCurrentUserProperty(prop) {
+
+		const currentUser = this.getCurrentUser();
+		if(currentUser)
+			return currentUser.providerData[0][prop];
+		return null;			
+	}
+
 	// https://firebase.google.com/docs/auth/web/manage-users?authuser=0
 	googleLogin() {
 

@@ -5,18 +5,19 @@ import { FIRESTORE_TIMESTAMP } from '../../common/TypeUtil';
 import Tracer from '../../common/Tracer';
 import { FireStoreDocumentBaseClass}  from '../../common/FireStoreDocumentBaseClass';
 
-// DBLink Type Definition
+const typeDefDBObjectName = 'DBLink';
+
 const TypeDef = {
 
-	__name: 		'DBLink',
-	__collectionName:'DBLinks',
+	__name: 		  typeDefDBObjectName,
+	__collectionName: typeDefDBObjectName+'s',
 
-	id:				'String',
-	link:			'String',
-	description:	'String',
-	createdAt: 		FIRESTORE_TIMESTAMP,
-	updatedAt: 		FIRESTORE_TIMESTAMP,
-}
+	id:				  'String',
+	link:			  'String',
+	description:	  'String',
+	createdAt: 		  FIRESTORE_TIMESTAMP,
+	updatedAt: 		  FIRESTORE_TIMESTAMP,
+};
 
 // This class allow to add, update, delete document of the type definition DBLink.
 export class DBLink extends FireStoreDocumentBaseClass {
@@ -24,7 +25,7 @@ export class DBLink extends FireStoreDocumentBaseClass {
 	constructor() {
 
 		super(TypeDef);
-		this.name = 'DBLink';
+		this.name = typeDefDBObjectName;
 		Tracer.log(`constructor`, this);
 	}
 	create(link, description) {
@@ -43,8 +44,8 @@ export class DBLink extends FireStoreDocumentBaseClass {
 			id: PropTypes.string.isRequired,
 			link: PropTypes.string.isRequired,
 			description: PropTypes.string.isRequired,
-			createdAt: PropTypes.object.isRequired,
-			updatedAt: PropTypes.object.isRequired,
+			createdAt: PropTypes.object.isRequired, // FIRESTORE_TIMESTAMP
+			updatedAt: PropTypes.object.isRequired, // FIRESTORE_TIMESTAMP
 		});
 	}
 };

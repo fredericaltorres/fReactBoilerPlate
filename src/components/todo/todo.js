@@ -4,10 +4,11 @@ import { FIRESTORE_TIMESTAMP } from '../../common/TypeUtil';
 import Tracer from '../../common/Tracer';
 import { FireStoreDocumentBaseClass}  from '../../common/FireStoreDocumentBaseClass';
 
-// ToDo Type Definition
+const typeDefDBObjectName = 'ToDo';
+
 const TypeDef = {
 
-	__name: 		'ToDo',
+	__name: 		typeDefDBObjectName,
 	__collectionName:'todoItems',
 
 	id:				'String',
@@ -24,7 +25,7 @@ export class ToDo extends FireStoreDocumentBaseClass {
 	constructor() {
 
 		super(TypeDef);
-		this.name = 'ToDo';
+		this.name = typeDefDBObjectName;
 		Tracer.log(`constructor`, this);
 	}
 	create(description, order) {
