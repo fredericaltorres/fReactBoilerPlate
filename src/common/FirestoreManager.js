@@ -133,10 +133,54 @@ class FirestoreManager {
 		this._firestoreDb = firestore;
 		return this._firestoreDb;
 	}
+	
+	getStorage() {
+
+		return firebase.storage();
+	}
 
 	getStorageRef() {
 
-		return firebase.storage().ref();
+		return this.getStorage().ref();
+	}
+
+	uploadTextAsFile(fileName, text) {
+
+		Tracer.log(`upload text file:${fileName}`);
+
+		return new Promise((resolve, reject) => {
+
+			const storageRef = this.getStorageRef();
+			var mountainsRef = storageRef.child(fileName);
+			mountainsRef.putString(text).then((snapshot) => {
+				Tracer.log(`text file ${fileName} created`);
+				resolve(fileName);
+			}).catch((err) => {
+				Tracer.error(`text file ${fileName} creation failed`);
+				reject(fileName);
+			});
+		});
+	}
+
+	// https://developer.mozilla.org/en-US/docs/Web/API/FileList
+	uploadFile(fileObject, parentFolder = null) {
+
+		// const fileName = (parentFolder == null) ? "" : parentFolder.toString().replace('/', '_') + "/" + fileObject.name;
+		const fileName = (parentFolder == null) ? "" : parentFolder.toString() + "/" + fileObject.name;
+		Tracer.log(`upload file:${fileName}`);
+
+		return new Promise((resolve, reject) => {
+
+			const storageRef = this.getStorageRef();
+			var mountainsRef = storageRef.child(fileName);
+			mountainsRef.put(fileObject).then((snapshot) => {
+				Tracer.log(`File ${fileName} created`);
+				resolve(fileName);
+			}).catch((err) => {
+				Tracer.error(`File ${fileName} creation failed`);
+				reject(fileName);
+			});
+		});
 	}
 
 	getCollection(name) {

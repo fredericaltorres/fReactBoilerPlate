@@ -39,7 +39,7 @@ class TypeDefUtil {
 					//nanoseconds: 661000000, seconds: 1541389535
 					const errMsg = `TypeUtil.verifyType error on property:${property}, expectedType:${expectedType}, actualType:${actualType}`;
 					r = false;
-					if(throwEx) Tracer.throwEx(errMsg);
+					if(throwEx) Tracer.throw(errMsg);
 				}				
 			}
 			else {
@@ -47,7 +47,7 @@ class TypeDefUtil {
 				if(expectedType !== actualType) {
 					const errMsg = `TypeUtil.verifyType error on property:${property}, expectedType:${expectedType}, actualType:${actualType}`;
 					r = false;
-					if(throwEx) Tracer.throwEx(errMsg);
+					if(throwEx) Tracer.throw(errMsg);
 				}
 			}
 		});

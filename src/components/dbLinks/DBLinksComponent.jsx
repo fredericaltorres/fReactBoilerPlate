@@ -67,12 +67,50 @@ class DBLinksComponent extends React.PureComponent {
 		this.monitorDBLinksCollection();
 	}
 	
-	addLinks () {
+	// addLinks = () => {
 
-		const link = prompt('New link?', undefined);
-		if(link !== null) {
-			const description = prompt('Description?', undefined);
-			DBLink.add(DBLink.create(link, description));
+	// 	const link = prompt('New link?', undefined);
+	// 	if(link !== null) {
+	// 		debugger;
+	// 		const description = prompt('Description?', undefined);
+	// 		const order = DBLink.getMaxOrder(this.state.DBLinks);
+	// 		DBLink.add(DBLink.create(link, description, order));
+	// 	}
+	// }
+	
+	addBlankLinks = () => {
+
+		const order = DBLink.getMaxOrder(this.state.DBLinks);
+		DBLink.add(DBLink.create('<new>', '', order));
+	}
+
+	export = () => {
+
+		console.dir(this.state.DBLinks);
+		console.log(JSON.stringify(this.state.DBLinks));
+	}
+
+	uploadSelectedFiles = (dbLinkId) => {
+
+		const dbLink = this.state.DBLinks.find((dbLink) => { return dbLink.id === dbLinkId});
+		if(dbLink) {
+			
+			Tracer.log(`Uploading files dbLinkId:${dbLinkId}`);
+			const files = Object.values(document.getElementById('fileItem').files);
+			var promises = [];
+			files.forEach((file) => {
+				dbLink.files.push(file.name);
+				promises.push(firestoreManager.uploadFile(file, dbLinkId));
+			});
+			Promise.all(promises).then(() => {
+				Tracer.log(`Done uploading files`);
+				DBLink.update(dbLink).then(() => {
+					Tracer.log(`Done uploading dbLink ${dbLinkId} with files meta data`);
+				});
+			});
+		}
+		else {
+			alert(`Cannot find dblink:${dbLinkId}`);
 		}
 	}
 
@@ -82,9 +120,14 @@ class DBLinksComponent extends React.PureComponent {
 
 		if(this.isAuthenticated()) {
 			return <div>
-				<Button isLoading={isLoading} text="Add" onClick={this.addLinks} />
+				<Button isLoading={isLoading} text="New" onClick={this.addBlankLinks} />
 				&nbsp;
-				<Button isLoading={isLoading} text="Test" onClick={this.isAuthenticated} />
+				<Button isLoading={isLoading} text="Export" onClick={this.export} />
+				&nbsp;
+				<Button isLoading={isLoading} text="Test" onClick={() => alert(this.isAuthenticated())} />
+				&nbsp;				
+				{/* https://developer.mozilla.org/en-US/docs/Web/API/FileList */}
+				<input id="fileItem" type="file"></input>
 			</div>;
 		}
 		else {
@@ -102,6 +145,7 @@ class DBLinksComponent extends React.PureComponent {
 			dbLink={linkComponent}
 			key={linkComponent.id}
 			deleteDbLink={DBLink.delete}
+			uploadSelectedFiles={this.uploadSelectedFiles}
 		/>;
 	}
 
@@ -117,10 +161,9 @@ class DBLinksComponent extends React.PureComponent {
 	render() {
 
 		Tracer.log(`render isLoading:${this.state.isLoading}`, this);
+		const authenticatedUserDisplayName = firestoreManager.getCurrentUserDisplayName();
 
-		const authenticatedUser = firestoreManager.getCurrentUserDisplayName();
-
-		const statusMessage = this.state.isLoading ? "Busy... " : `${this.state.DBLinks.length} links. User:${authenticatedUser}, Ready...`;
+		const statusMessage = this.state.isLoading ? "Busy... " : `${this.state.DBLinks.length} links. User:${authenticatedUserDisplayName}, Ready...`;
 		let statusClassName = this.state.isLoading ? "alert alert-warning" : "alert alert-success";
 
 		return (

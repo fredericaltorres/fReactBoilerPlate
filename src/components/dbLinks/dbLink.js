@@ -15,6 +15,8 @@ const TypeDef = {
 	id:				  'String',
 	link:			  'String',
 	description:	  'String',
+	order:			  'Number',
+	files:			  'Array',
 	createdAt: 		  FIRESTORE_TIMESTAMP,
 	updatedAt: 		  FIRESTORE_TIMESTAMP,
 };
@@ -28,12 +30,13 @@ export class DBLink extends FireStoreDocumentBaseClass {
 		this.name = typeDefDBObjectName;
 		Tracer.log(`constructor`, this);
 	}
-	create(link, description) {
-
+	create(link, description, order) {
 		const doc = {
 			id: ComponentUtil.getNewUniqueId(), // Do not prefix the id with the name of the collection, firebase does not like it
 			link,
 			description,
+			order,
+			files:[],
 			createdAt: firestoreManager.now(),
 			updatedAt: firestoreManager.now(),
 		};
@@ -44,9 +47,20 @@ export class DBLink extends FireStoreDocumentBaseClass {
 			id: PropTypes.string.isRequired,
 			link: PropTypes.string.isRequired,
 			description: PropTypes.string.isRequired,
+			files: PropTypes.arrayOf(PropTypes.string).isRequired,
 			createdAt: PropTypes.object.isRequired, // FIRESTORE_TIMESTAMP
 			updatedAt: PropTypes.object.isRequired, // FIRESTORE_TIMESTAMP
 		});
 	}
+	getMaxOrder = (dbLinks) => {
+
+		let maxOrder = 0;
+		dbLinks.forEach((todo) => {
+			if(todo.order > maxOrder)
+				maxOrder = todo.order;
+		});
+		const r = maxOrder + 1;
+		return r;
+	}	
 };
 export default new DBLink();

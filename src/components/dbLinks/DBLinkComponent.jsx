@@ -14,12 +14,14 @@ class DBLinkComponent extends React.PureComponent {
 
 		dbLink : DBLink.shape(),
 		deleteDbLink	: PropTypes.func.isRequired,
+		uploadSelectedFiles: PropTypes.func.isRequired,
 	};
 
 	state = {
 
 		isEditing: false,
 		editText: null,
+		editDescription: null,
 	};
 
 	constructor() {
@@ -33,6 +35,11 @@ class DBLinkComponent extends React.PureComponent {
 	onDeleteClick = () => {
 		
 		this.props.deleteDbLink(this.props.dbLink.id);
+	}
+
+	uploadSelectedFiles = () => {
+		
+		this.props.uploadSelectedFiles(this.props.dbLink.id);
 	}
 
 	onEditClick = () => {
@@ -51,32 +58,48 @@ class DBLinkComponent extends React.PureComponent {
 		window.open(this.getLink(), "_blank" );// "toolbar=yes,top=0,left=0,width=400,height=400"
 	}
 
-	handleChange = (event) => {
+	handleLinkChange = (event) => {
 
 		ComponentUtil.forceRefresh(this, { editText : event.target.value });
 	}
 
+	handleDescriptionChange = (event) => {
+
+		ComponentUtil.forceRefresh(this, { editDescription : event.target.value });
+	}
+
 	handleKeyDown = (event) => {
+		
 		const self = this;
 		if (event.which === ESCAPE_KEY) {
 			this.onEditClick();
 		}
 		else if (event.which === ENTER_KEY) {
-			var link = this.state.editText.trim();
-			if(link) {
+
+			if(this.getLink()) {
+				
 				var dbLink = this.props.dbLink;
-				dbLink.link = link;
+				dbLink.link = this.getLink();
+				dbLink.description = this.getDescription();
 				DBLink.update(dbLink).then(() => {
 					self.onEditClick();
 				});
 			}
-		}			
+		}
 	}
 
 	getLink() {
+
 		if(this.state.editText)
 			return this.state.editText;
 		return this.props.dbLink.link;			
+	}
+
+	getDescription() {
+
+		if(this.state.editDescription)
+			return this.state.editDescription;
+		return this.props.dbLink.description;
 	}
 
 	render() {
@@ -85,17 +108,31 @@ class DBLinkComponent extends React.PureComponent {
 			<b>{this.getLink()}</b>
 		</button>;
 
+		let descriptionRendering = <i>{this.props.dbLink.description}</i>;
+
 		if(this.state.isEditing) {
-			linkRendering = 
-			<span>
+
+			linkRendering = <span>
 				&nbsp;&nbsp;<input
 				type="text"
 				style={{color:'red', width:'400px'}}
 				className="edit" 
 				value={this.getLink()}
-				onChange={this.props.isLoading ? () => {} : this.handleChange} 
+				onChange={this.props.isLoading ? () => {} : this.handleLinkChange} 
 				onKeyDown={this.handleKeyDown}
 				ref={(input) => { this.editField = input; }} 
+				/>
+			</span>
+
+			descriptionRendering = <span>
+				&nbsp;&nbsp;<input
+				type="text"
+				style={{color:'red', width:'400px'}}
+				className="edit" 
+				value={this.getDescription()}
+				onChange={this.props.isLoading ? () => {} : this.handleDescriptionChange} 
+				onKeyDown={this.handleKeyDown}
+				ref={(input) => { this.editDescription = input; }} 
 				/>
 			</span>
 		}
@@ -105,11 +142,17 @@ class DBLinkComponent extends React.PureComponent {
 				<button type="button" className="btn btn-info btn-sm" onClick={this.onDeleteClick}>Delete</button>
 				&nbsp;
 				<button type="button" className="btn btn-info btn-sm" onClick={this.onEditClick}>Edit</button>
+				&nbsp;
+				<button type="button" className="btn btn-info btn-sm" onClick={this.uploadSelectedFiles}>Upload</button>
 
 				{linkRendering}
 
-				<br/>
-				<i>{this.props.dbLink.description}</i>
+				<div style={{marginTop:"3px"}}>
+					{descriptionRendering}
+				</div>
+				<small>
+					Files:{this.props.dbLink.files}
+				</small>
 			</li>
 		);
 	}	
