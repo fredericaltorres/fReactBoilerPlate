@@ -17,6 +17,8 @@ class DBLinkComponent extends React.PureComponent {
 		dbLink : DBLink.shape(),
 		fileCount		: PropTypes.number.isRequired, // Just passe to force a refresh when we add/remove a file
 		deleteDbLink	: PropTypes.func.isRequired,
+
+		// TODO: Implement this in this componebt rather than in parent
 		uploadSelectedFiles: PropTypes.func.isRequired,
 	};
 
@@ -30,13 +32,29 @@ class DBLinkComponent extends React.PureComponent {
 
 	constructor() {
 		super();		
+		this.name = "DBLink-Component.jsx";
 	}
 
 	componentDidMount() {
 
-		Tracer.log(`DBLinkComponent componentDidMount >>>>>>>>>>>> `);
-
 		ComponentUtil.forceRefresh(this, { isEditing: this.state.isEditing, editText: this.props.link } );
+		this.triggerLoadingFileMetaData();
+	}
+
+	triggerLoadingFileMetaData = () => {
+
+		Tracer.log(`triggerLoadingFileMetaData >>>>>>>>>>>> `, this);
+
+		const promises = [];
+		const files = Object.keys(this.props.dbLink.files);
+		files.forEach((fileName) => {
+			promises.push(firestoreManager.GetFileMetaDataFromStorage(fileName, this.props.dbLink.id));
+		});		
+
+		Promise.all(promises).then((metadatas) => {
+			ComponentUtil.forceRefresh(this, { fileMetadatas : metadatas } );
+		});
+
 		
 		const metaDataSample = {
 			"type": "file",
@@ -53,26 +71,19 @@ class DBLinkComponent extends React.PureComponent {
 			"contentEncoding": "identity",
 			"contentType": "text/xml"
 		}
-
-		const promises = [];
-		const files = Object.keys(this.props.dbLink.files);
-		files.forEach((fileName) => {
-			promises.push(firestoreManager.GetFileMetaDataFromStorage(fileName, this.props.dbLink.id));
-		});		
-
-		Promise.all(promises).then((metadatas) => {
-			ComponentUtil.forceRefresh(this, { fileMetadatas : metadatas } );
-		});
 	}
 
 	onDeleteClick = () => {
-		
+
 		this.props.deleteDbLink(this.props.dbLink.id);
 	}
 
 	uploadSelectedFiles = () => {
 
-		this.props.uploadSelectedFiles(this.props.dbLink.id);
+		this.props.uploadSelectedFiles(this.props.dbLink.id).then(() => {
+			Tracer.log(`forceRefresh after uploadSelectedFiles =============== ${JSON.stringify(this.props.dbLink.files)}  `, this);
+			this.triggerLoadingFileMetaData();
+		});		
 	}
 
 	onEditClick = () => {
@@ -136,6 +147,9 @@ class DBLinkComponent extends React.PureComponent {
 	}
 
 	render() {
+		
+		Tracer.log(`render`, this);
+		// this.triggerLoadingFileMetaData();
 
 		let linkRendering = <button type="button" className="btn btn-link" onClick={this.onOpenClick}>
 			<b>{this.getLink()}</b>
@@ -172,10 +186,13 @@ class DBLinkComponent extends React.PureComponent {
 
 		let DBLinkFileInfoComponentJsx = <span>No files</span>;
 		const fileMetadatas = Object.values(this.state.fileMetadatas);
+
+		Tracer.log(`this.state.fileMetadatas length:${this.state.fileMetadatas.length}`);
+
 		if(fileMetadatas.length > 0) {
 			DBLinkFileInfoComponentJsx = fileMetadatas.map((fileMetaData) => {
 				return <li key={fileMetaData.name} >
-					<DBLinkFileInfoComponent dbLink={this.props.dbLink} key={fileMetaData.name} name={fileMetaData.name} size={fileMetaData.size} fullPath={fileMetaData.fullPath} />
+					<DBLinkFileInfoComponent dbLink={this.props.dbLink} key={fileMetaData.name} name={fileMetaData.name} size={fileMetaData.size} fullPath={fileMetaData.fullPath} triggerParentRefresh={this.triggerLoadingFileMetaData} />
 				</li>
 				 
 			});

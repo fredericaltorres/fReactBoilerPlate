@@ -13,21 +13,26 @@ class DBLinkFileInfoComponent extends React.PureComponent {
 		fullPath: PropTypes.string.isRequired,
 		name	: PropTypes.string.isRequired,
 		size	: PropTypes.number.isRequired,
+		triggerParentRefresh : PropTypes.func.isRequired,
 	};
 
 	constructor() {
 		super();		
+		this.name = "DBLinkFileInfoComponent";
 	}
 
 	onDeleteClick = (fullPath) => {
-		
+
 		Tracer.log(`Delete ${fullPath}, ${this.props.dbLink.id}`);
 		DBLink.deleteFile(this.props.dbLink, this.props.name).then(() => {
 			Tracer.log(`Deleted ${fullPath}, ${this.props.dbLink.id}`);
+			this.props.triggerParentRefresh();
 		});
 	}
 
 	render() {
+
+		Tracer.log(`render`, this);
 
 		return <span>
 			{this.props.name}, {Math.round(this.props.size/1024)} Kb

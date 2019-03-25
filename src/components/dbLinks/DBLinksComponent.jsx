@@ -31,7 +31,7 @@ class DBLinksComponent extends React.PureComponent {
 	constructor(props) {
 
 		super(props);
-		this.name = "DBLinks.jsx";
+		this.name = "DBLinks-Component.jsx";
 		tracer.log('constructor', this);
 	}
 
@@ -96,28 +96,31 @@ class DBLinksComponent extends React.PureComponent {
 
 	uploadSelectedFiles = (dbLinkId) => {
 
-		const dbLink = this.state.DBLinks.find((dbLink) => { return dbLink.id === dbLinkId});
-		if(dbLink) {
-			
-			Tracer.log(`Uploading files dbLinkId:${dbLinkId}`);
-			const files = Object.values(document.getElementById('fileItem').files);
-			var promises = [];
-			files.forEach((file) => {
+		return new Promise((resolve, reject) => {
+
+			const dbLink = this.state.DBLinks.find((dbLink) => { return dbLink.id === dbLinkId});
+			if(dbLink) {
 				
-				dbLink.files[file.name] = file.size;
-				promises.push(firestoreManager.uploadFileToStorage(file, dbLinkId));
-			});
-			Promise.all(promises).then(() => {
-				Tracer.log(`Done uploading files`);
-				DBLink.update(dbLink).then(() => {
-					Tracer.log(`Done uploading dbLink ${dbLinkId} with files meta data`);
-					ComponentUtil.forceRefresh(this);  // Force to refresh, I do not know why it does not
+				Tracer.log(`Uploading files dbLinkId:${dbLinkId}`);
+				const files = Object.values(document.getElementById('fileItem').files);
+				var promises = [];
+				files.forEach((file) => {
+					dbLink.files[file.name] = file.size;
+					promises.push(firestoreManager.uploadFileToStorage(file, dbLinkId));
 				});
-			});
-		}
-		else {
-			alert(`Cannot find dblink:${dbLinkId}`);
-		}
+				Promise.all(promises).then(() => {
+					Tracer.log(`Done uploading files`);
+					DBLink.update(dbLink).then(() => {
+						Tracer.log(`Done uploading dbLink ${dbLinkId} with files meta data`);
+						resolve();
+					});
+				});
+			}
+			else {
+				alert(`Cannot find dblink:${dbLinkId}`);
+				reject();
+			}
+		});
 	}
 
 	getAddButtonAlertJsx = (isLoading, render = true) => {
