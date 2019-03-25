@@ -5,6 +5,8 @@ import firestoreManager from "../../common/FirestoreManager";
 import DBLink from './dbLink';
 import ComponentUtil from '../../common/ComponentUtil';
 import { ESCAPE_KEY, ENTER_KEY } from '../../common/ComponentUtil';
+import DBLinkFileInfoComponent from './DBLinkFileInfoComponent';
+import { debug } from "util";
 
 const isMobile = false;
 
@@ -13,6 +15,7 @@ class DBLinkComponent extends React.PureComponent {
 	static propTypes = {		
 
 		dbLink : DBLink.shape(),
+		fileCount		: PropTypes.number.isRequired, // Just passe to force a refresh when we add/remove a file
 		deleteDbLink	: PropTypes.func.isRequired,
 		uploadSelectedFiles: PropTypes.func.isRequired,
 	};
@@ -22,6 +25,7 @@ class DBLinkComponent extends React.PureComponent {
 		isEditing: false,
 		editText: null,
 		editDescription: null,
+		fileMetadatas:[]
 	};
 
 	constructor() {
@@ -29,7 +33,36 @@ class DBLinkComponent extends React.PureComponent {
 	}
 
 	componentDidMount() {
+
+		Tracer.log(`DBLinkComponent componentDidMount >>>>>>>>>>>> `);
+
 		ComponentUtil.forceRefresh(this, { isEditing: this.state.isEditing, editText: this.props.link } );
+		
+		const metaDataSample = {
+			"type": "file",
+			"bucket": "fredtodo-f553b.appspot.com",
+			"generation": "1553469831203489",
+			"metageneration": "1",
+			"fullPath": "DBLinks/05bf0902e73e3/ExportedClient.xml",
+			"name": "ExportedClient.xml",
+			"size": 805667,
+			"timeCreated": "2019-03-24T23:23:51.203Z",
+			"updated": "2019-03-24T23:23:51.203Z",
+			"md5Hash": "yZVF/2w9KoHaH2rzJe+2AA==",
+			"contentDisposition": "inline; filename*=utf-8''ExportedClient.xml",
+			"contentEncoding": "identity",
+			"contentType": "text/xml"
+		}
+
+		const promises = [];
+		const files = Object.keys(this.props.dbLink.files);
+		files.forEach((fileName) => {
+			promises.push(firestoreManager.GetFileMetaDataFromStorage(fileName, this.props.dbLink.id));
+		});		
+
+		Promise.all(promises).then((metadatas) => {
+			ComponentUtil.forceRefresh(this, { fileMetadatas : metadatas } );
+		});
 	}
 
 	onDeleteClick = () => {
@@ -38,7 +71,7 @@ class DBLinkComponent extends React.PureComponent {
 	}
 
 	uploadSelectedFiles = () => {
-		
+
 		this.props.uploadSelectedFiles(this.props.dbLink.id);
 	}
 
@@ -137,8 +170,19 @@ class DBLinkComponent extends React.PureComponent {
 			</span>
 		}
 
+		let DBLinkFileInfoComponentJsx = <span>No files</span>;
+		const fileMetadatas = Object.values(this.state.fileMetadatas);
+		if(fileMetadatas.length > 0) {
+			DBLinkFileInfoComponentJsx = fileMetadatas.map((fileMetaData) => {
+				return <li key={fileMetaData.name} >
+					<DBLinkFileInfoComponent dbLink={this.props.dbLink} key={fileMetaData.name} name={fileMetaData.name} size={fileMetaData.size} fullPath={fileMetaData.fullPath} />
+				</li>
+				 
+			});
+		}
+
 		return (
-			<li key={this.props.id} id={this.props.id} className="list-group-item">
+			<li key={this.props.dbLink.id} id={this.props.dbLink.id} className="list-group-item">
 				<button type="button" className="btn btn-info btn-sm" onClick={this.onDeleteClick}>Delete</button>
 				&nbsp;
 				<button type="button" className="btn btn-info btn-sm" onClick={this.onEditClick}>Edit</button>
@@ -151,7 +195,9 @@ class DBLinkComponent extends React.PureComponent {
 					{descriptionRendering}
 				</div>
 				<small>
-					Files:{this.props.dbLink.files}
+					<ul count={this.props.fileCount}>
+						{DBLinkFileInfoComponentJsx}
+					</ul>
 				</small>
 			</li>
 		);

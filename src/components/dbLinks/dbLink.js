@@ -16,7 +16,7 @@ const TypeDef = {
 	link:			  'String',
 	description:	  'String',
 	order:			  'Number',
-	files:			  'Array',
+	files:			  'Object',
 	createdAt: 		  FIRESTORE_TIMESTAMP,
 	updatedAt: 		  FIRESTORE_TIMESTAMP,
 };
@@ -36,7 +36,7 @@ export class DBLink extends FireStoreDocumentBaseClass {
 			link,
 			description,
 			order,
-			files:[],
+			files:{},
 			createdAt: firestoreManager.now(),
 			updatedAt: firestoreManager.now(),
 		};
@@ -47,7 +47,7 @@ export class DBLink extends FireStoreDocumentBaseClass {
 			id: PropTypes.string.isRequired,
 			link: PropTypes.string.isRequired,
 			description: PropTypes.string.isRequired,
-			files: PropTypes.arrayOf(PropTypes.string).isRequired,
+			files: PropTypes.object.isRequired,
 			createdAt: PropTypes.object.isRequired, // FIRESTORE_TIMESTAMP
 			updatedAt: PropTypes.object.isRequired, // FIRESTORE_TIMESTAMP
 		});
@@ -62,5 +62,19 @@ export class DBLink extends FireStoreDocumentBaseClass {
 		const r = maxOrder + 1;
 		return r;
 	}	
+	deleteFile = (dbLink, fileName) => {
+
+		return new Promise((resolve, reject) => {
+
+			firestoreManager.deleteFileFromStorage(fileName, dbLink.id)
+				.then(() => {
+					delete dbLink.files[fileName];					
+					this.update(dbLink)
+						.then(() => { resolve(); })
+						.catch((err) => { reject(err); });
+				})
+				.catch((err) => { reject(err); });
+		});
+	}
 };
 export default new DBLink();

@@ -56,3 +56,20 @@
         }
     }
 ]
+
+
+{
+    "type": "file",
+    "bucket": "fredtodo-f553b.appspot.com",
+    "generation": "1553469831203489",
+    "metageneration": "1",
+    "fullPath": "DBLinks/05bf0902e73e3/ExportedClient.xml",
+    "name": "ExportedClient.xml",
+    "size": 805667,
+    "timeCreated": "2019-03-24T23:23:51.203Z",
+    "updated": "2019-03-24T23:23:51.203Z",
+    "md5Hash": "yZVF/2w9KoHaH2rzJe+2AA==",
+    "contentDisposition": "inline; filename*=utf-8''ExportedClient.xml",
+    "contentEncoding": "identity",
+    "contentType": "text/xml"
+}

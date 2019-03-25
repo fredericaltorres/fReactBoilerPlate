@@ -57,6 +57,10 @@ class DBLinksComponent extends React.PureComponent {
 		);
 	}
 
+	test = () => {
+		ComponentUtil.forceRefresh(this); 
+	}
+
 	stopMonitorDBLinksCollection() {
 
 		firestoreManager.stopMonitorQuery(ToDo.getCollectionName());
@@ -99,13 +103,15 @@ class DBLinksComponent extends React.PureComponent {
 			const files = Object.values(document.getElementById('fileItem').files);
 			var promises = [];
 			files.forEach((file) => {
-				dbLink.files.push(file.name);
-				promises.push(firestoreManager.uploadFile(file, dbLinkId));
+				
+				dbLink.files[file.name] = file.size;
+				promises.push(firestoreManager.uploadFileToStorage(file, dbLinkId));
 			});
 			Promise.all(promises).then(() => {
 				Tracer.log(`Done uploading files`);
 				DBLink.update(dbLink).then(() => {
 					Tracer.log(`Done uploading dbLink ${dbLinkId} with files meta data`);
+					ComponentUtil.forceRefresh(this);  // Force to refresh, I do not know why it does not
 				});
 			});
 		}
@@ -124,7 +130,7 @@ class DBLinksComponent extends React.PureComponent {
 				&nbsp;
 				<Button isLoading={isLoading} text="Export" onClick={this.export} />
 				&nbsp;
-				<Button isLoading={isLoading} text="Test" onClick={() => alert(this.isAuthenticated())} />
+				<Button isLoading={isLoading} text="Test" onClick={this.test} />
 				&nbsp;				
 				{/* https://developer.mozilla.org/en-US/docs/Web/API/FileList */}
 				<input id="fileItem" type="file"></input>
@@ -141,7 +147,9 @@ class DBLinksComponent extends React.PureComponent {
 
 	renderDBLinkToJsx = (linkComponent) => {
 		
+		const fileCount = Object.keys(linkComponent.files).length;
 		return <DBLinkComponent 
+			fileCount={fileCount}
 			dbLink={linkComponent}
 			key={linkComponent.id}
 			deleteDbLink={DBLink.delete}

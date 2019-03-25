@@ -144,7 +144,7 @@ class FirestoreManager {
 		return this.getStorage().ref();
 	}
 
-	uploadTextAsFile(fileName, text) {
+	uploadTextAsFileToStorage(fileName, text) {
 
 		Tracer.log(`upload text file:${fileName}`);
 
@@ -162,12 +162,48 @@ class FirestoreManager {
 		});
 	}
 
-	// https://developer.mozilla.org/en-US/docs/Web/API/FileList
-	uploadFile(fileObject, parentFolder = null) {
+	// https://firebase.google.com/docs/storage/web/file-metadata
+	GetFileMetaDataFromStorage(fileNameOnly, parentFolder = null) {
 
-		// const fileName = (parentFolder == null) ? "" : parentFolder.toString().replace('/', '_') + "/" + fileObject.name;
-		const fileName = (parentFolder == null) ? "" : parentFolder.toString() + "/" + fileObject.name;
-		Tracer.log(`upload file:${fileName}`);
+		const fileName = this.getStorageFullPath(parentFolder, fileNameOnly);
+		Tracer.log(`GetFileMetaDataFromStorage file:${fileName}`);
+
+		return new Promise((resolve, reject) => {
+
+			var fileRef = this.getStorageRef().child(fileName);
+			fileRef.getMetadata().then((metadata) => {
+				Tracer.log(`GetFileMetaDataFromStorage file:${fileName} ok`);
+				resolve(metadata);
+			}).catch((err) => {
+				Tracer.log(`GetFileMetaDataFromStorage file:${fileName} failed ${err}`);
+				reject(err);
+			});
+		});
+	}
+
+	deleteFileFromStorage(fileNameOnly, parentFolder = null) {
+
+		const fileName = this.getStorageFullPath(parentFolder, fileNameOnly);
+		Tracer.log(`deleteFileFromStorage file:${fileName}`);
+
+		return new Promise((resolve, reject) => {
+
+			var fileRef = this.getStorageRef().child(fileName);
+			fileRef.delete().then(() => {
+				Tracer.log(`deleteFileFromStorage file:${fileName} ok`);
+				resolve(true);
+			}).catch((err) => {
+				Tracer.log(`deleteFileFromStorage file:${fileName} failed ${err}`);
+				reject(err);
+			});
+		});
+	}
+
+	// https://developer.mozilla.org/en-US/docs/Web/API/FileList
+	uploadFileToStorage(fileObject, parentFolder = null) {
+
+		const fileName = this.getStorageFullPath(parentFolder, fileObject.name);
+		Tracer.log(`uploadFileToStorage file:${fileName}`);
 
 		return new Promise((resolve, reject) => {
 
@@ -181,6 +217,10 @@ class FirestoreManager {
 				reject(fileName);
 			});
 		});
+	}
+
+	getStorageFullPath(parentFolder, fileName) {
+		return (parentFolder == null) ? "" : parentFolder.toString() + "/" + fileName;
 	}
 
 	getCollection(name) {
