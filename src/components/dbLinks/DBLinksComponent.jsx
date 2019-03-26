@@ -135,7 +135,7 @@ class DBLinksComponent extends React.PureComponent {
 	}
 
 	setIsLoading = (isLoading) => {
-		
+
 		ComponentUtil.forceRefresh(this, { isLoading } ); 
 	}
 
@@ -166,7 +166,7 @@ class DBLinksComponent extends React.PureComponent {
 		Tracer.log(`render isLoading:${this.state.isLoading}`, this);
 		const authenticatedUserDisplayName = firestoreManager.getCurrentUserDisplayName();
 
-		const statusMessage = this.state.isLoading ? "Busy... " : `${this.state.DBLinks.length} links. User:${authenticatedUserDisplayName}, Ready...`;
+		const statusMessage = this.state.isLoading ? "Busy. . . " : `${this.state.DBLinks.length} links. User:${authenticatedUserDisplayName}, Ready...`;
 		let statusClassName = this.state.isLoading ? "alert alert-warning" : "alert alert-success";
 
 		return (

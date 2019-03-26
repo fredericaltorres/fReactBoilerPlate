@@ -26,6 +26,8 @@ class DBLinkComponent extends React.PureComponent {
 		fileMetadatas:[]
 	};
 
+	LINK_MAX_LENGTH_FOR_DISPLAY = 55;
+
 	constructor() {
 
 		super();		
@@ -159,6 +161,15 @@ class DBLinkComponent extends React.PureComponent {
 		return this.props.dbLink.link;			
 	}
 
+	getLinkForDisplay() {
+
+		const link = this.getLink();
+		if(link.length > this.LINK_MAX_LENGTH_FOR_DISPLAY)
+			return `${link.substring(0, this.LINK_MAX_LENGTH_FOR_DISPLAY)} . . .`;
+
+		return link;
+	}
+
 	getDescription() {
 
 		if(this.state.editDescription)
@@ -171,7 +182,7 @@ class DBLinkComponent extends React.PureComponent {
 		Tracer.log(`render`, this);
 
 		let linkRendering = <button type="button" className="btn btn-link" onClick={this.onOpenClick}>
-			<b>{this.getLink()}</b>
+			<b>{this.getLinkForDisplay()}</b>
 		</button>;
 
 		let descriptionRendering = <i>{this.props.dbLink.description}</i>;
