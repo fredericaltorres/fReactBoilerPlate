@@ -135,6 +135,7 @@ class DBLinksComponent extends React.PureComponent {
 	}
 
 	setIsLoading = (isLoading) => {
+		
 		ComponentUtil.forceRefresh(this, { isLoading } ); 
 	}
 

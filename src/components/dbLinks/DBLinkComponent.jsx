@@ -93,10 +93,12 @@ class DBLinkComponent extends React.PureComponent {
 
 	onDeleteClick = () => {
 
-		this.props.setIsLoading(true);
-		this.props.deleteDbLink(this.props.dbLink.id).finally(() => {
-			this.props.setIsLoading(false);
-		});
+		if(confirm(`Delete link?`)) {
+			this.props.setIsLoading(true);
+			this.props.deleteDbLink(this.props.dbLink.id).finally(() => {
+				this.props.setIsLoading(false);
+			});
+		}
 	}
 
 	onEditClick = () => {
@@ -207,6 +209,7 @@ class DBLinkComponent extends React.PureComponent {
 		Tracer.log(`this.state.fileMetadatas length:${this.state.fileMetadatas.length}`, this);
 
 		if(fileMetadatas.length > 0) {
+
 			DBLinkFileInfoComponentJsx = fileMetadatas.map((fileMetaData) => {
 				return <li key={fileMetaData.name} >
 					<DBLinkFileInfoComponent setIsLoading={this.props.setIsLoading} 
@@ -231,6 +234,7 @@ class DBLinkComponent extends React.PureComponent {
 				<button type="button" className="btn btn-info btn-sm" onClick={this.uploadSelectedFiles}>Upload</button>
 				&nbsp;
 				<button type="button" className="btn btn-info btn-sm" onClick={this.onDeleteClick}>Delete</button>
+				<input type="hidden" value={this.props.dbLink.id}></input>
 			</span>;
 		}
 
