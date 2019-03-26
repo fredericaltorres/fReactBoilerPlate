@@ -5,14 +5,11 @@ import Button from '../Button';
 import Checkbox from '../Checkbox';
 import firestoreManager from '../../common/FirestoreManager';
 import ComponentUtil from '../../common/ComponentUtil';
-import { ESCAPE_KEY, ENTER_KEY } from '../../common/ComponentUtil';
 import DBLink from './dbLink';
 import Tracer from "../../common/Tracer";
 import DBLinkComponent from './DBLinkComponent';
 
-//const googleFredUID = "WmPSqmDxokewWJsybaUMwoDmuoE2";
 const googleFredUID = "105884141315293539957";
-
 
 class DBLinksComponent extends React.PureComponent {
 
@@ -31,18 +28,40 @@ class DBLinksComponent extends React.PureComponent {
 	constructor(props) {
 
 		super(props);
-		this.name = "DBLinks-Component.jsx";
+		this.name = "DBLinksComponent";
 		tracer.log('constructor', this);
 	}
 
-	googleLogin() {
+	googleLogout = () => {
 
-		firestoreManager.googleLogin();
+		firestoreManager.logOut().then(() => {
+			ComponentUtil.forceRefresh(this); 
+		});
+	}
+
+	googleLogin = () => {
+
+		firestoreManager.googleLogin().then(() => {
+			ComponentUtil.forceRefresh(this); 
+			const uid = firestoreManager.getCurrentUserUID();
+			if(uid && googleFredUID !== uid) {
+				alert(`Current user logged in is not allowed as adminisatrator`);
+			}
+			// if(uid && googleFredUID == uid) {
+			// 	alert(`Adminisatrator`);
+			// }
+
+		});
 	}
 
 	isAuthenticated() {
 
-		return googleFredUID == firestoreManager.getCurrentUserUID();
+		const uid = firestoreManager.getCurrentUserUID();
+		// if(uid && googleFredUID !== uid) {
+		// 	alert(`Current user logged in is not allowed as adminisatrator`);
+		// }
+		// Tracer.log(`isAuthenticated ${googleFredUID} === ${uid}=> ${googleFredUID === uid}`);
+		return googleFredUID == uid;
 	}
 
 	monitorDBLinksCollection() {
@@ -50,7 +69,7 @@ class DBLinksComponent extends React.PureComponent {
 		firestoreManager.monitorQuery(
 			DBLink.getCollectionName(),
 			(records) => { 
-				Tracer.log(`collection ${DBLink.getCollectionName()} change detected, ${records.length} record(s)`);
+				Tracer.log(`collection ${DBLink.getCollectionName()} change detected, ${records.length} record(s)`, this);
 				ComponentUtil.forceRefresh(this, { DBLinks: records, isLoading: false } ); 
 			}, 
 			'createdAt'
@@ -58,7 +77,8 @@ class DBLinksComponent extends React.PureComponent {
 	}
 
 	test = () => {
-		ComponentUtil.forceRefresh(this); 
+
+		alert(this.isAuthenticated());
 	}
 
 	stopMonitorDBLinksCollection() {
@@ -71,17 +91,6 @@ class DBLinksComponent extends React.PureComponent {
 		this.monitorDBLinksCollection();
 	}
 	
-	// addLinks = () => {
-
-	// 	const link = prompt('New link?', undefined);
-	// 	if(link !== null) {
-	// 		debugger;
-	// 		const description = prompt('Description?', undefined);
-	// 		const order = DBLink.getMaxOrder(this.state.DBLinks);
-	// 		DBLink.add(DBLink.create(link, description, order));
-	// 	}
-	// }
-	
 	addBlankLinks = () => {
 
 		const order = DBLink.getMaxOrder(this.state.DBLinks);
@@ -90,37 +99,12 @@ class DBLinksComponent extends React.PureComponent {
 
 	export = () => {
 
-		console.dir(this.state.DBLinks);
-		console.log(JSON.stringify(this.state.DBLinks));
-	}
-
-	uploadSelectedFiles = (dbLinkId) => {
-
-		return new Promise((resolve, reject) => {
-
-			const dbLink = this.state.DBLinks.find((dbLink) => { return dbLink.id === dbLinkId});
-			if(dbLink) {
-				
-				Tracer.log(`Uploading files dbLinkId:${dbLinkId}`);
-				const files = Object.values(document.getElementById('fileItem').files);
-				var promises = [];
-				files.forEach((file) => {
-					dbLink.files[file.name] = file.size;
-					promises.push(firestoreManager.uploadFileToStorage(file, dbLinkId));
-				});
-				Promise.all(promises).then(() => {
-					Tracer.log(`Done uploading files`);
-					DBLink.update(dbLink).then(() => {
-						Tracer.log(`Done uploading dbLink ${dbLinkId} with files meta data`);
-						resolve();
-					});
-				});
-			}
-			else {
-				alert(`Cannot find dblink:${dbLinkId}`);
-				reject();
-			}
-		});
+		const marker = "******************************************************************************************";
+		console.log(marker);
+		// console.dir(this.state.DBLinks);
+		console.log(JSON.stringify(this.state.DBLinks, null, 2));
+		console.log(marker);
+		alert('See result in browser console');
 	}
 
 	getAddButtonAlertJsx = (isLoading, render = true) => {
@@ -129,6 +113,8 @@ class DBLinksComponent extends React.PureComponent {
 
 		if(this.isAuthenticated()) {
 			return <div>
+				<Button isLoading={isLoading} text="Log out" onClick={this.googleLogout} />
+				&nbsp;
 				<Button isLoading={isLoading} text="New" onClick={this.addBlankLinks} />
 				&nbsp;
 				<Button isLoading={isLoading} text="Export" onClick={this.export} />
@@ -136,7 +122,7 @@ class DBLinksComponent extends React.PureComponent {
 				<Button isLoading={isLoading} text="Test" onClick={this.test} />
 				&nbsp;				
 				{/* https://developer.mozilla.org/en-US/docs/Web/API/FileList */}
-				<input id="fileItem" type="file"></input>
+				<input id="fileItem" multiple type="file"></input>
 			</div>;
 		}
 		else {
@@ -148,15 +134,20 @@ class DBLinksComponent extends React.PureComponent {
 		}
 	}
 
+	setIsLoading = (isLoading) => {
+		ComponentUtil.forceRefresh(this, { isLoading } ); 
+	}
+
 	renderDBLinkToJsx = (linkComponent) => {
 		
 		const fileCount = Object.keys(linkComponent.files).length;
 		return <DBLinkComponent 
 			fileCount={fileCount}
 			dbLink={linkComponent}
+			isAuthenticated={this.isAuthenticated()}
 			key={linkComponent.id}
 			deleteDbLink={DBLink.delete}
-			uploadSelectedFiles={this.uploadSelectedFiles}
+			setIsLoading={this.setIsLoading}
 		/>;
 	}
 
@@ -179,15 +170,14 @@ class DBLinksComponent extends React.PureComponent {
 
 		return (
 			<div>
-				<h2>DBLinks (Firebase)</h2>
+				<h2>DBLinks with Firebase</h2> 
 
 				{this.getAddButtonAlertJsx(this.state.isLoading, true)}
 				
-				<div className={statusClassName} role="alert">
+				<div className={statusClassName} role="alert" style={{ marginTop:"2px"}}>
 					<strong>Status </strong> : {statusMessage}
 				</div>
-				
-				<ul className="list-group" style={{marginTop:'5px'}}>
+				<ul className="list-group" style={{marginTop:'0px'}}>
 					{this.renderDBLinksToJsx(this.state.DBLinks)}
 				</ul>
 			</div>

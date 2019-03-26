@@ -12,21 +12,29 @@ class DBLinkFileInfoComponent extends React.PureComponent {
 		dbLink  : PropTypes.object.isRequired,
 		fullPath: PropTypes.string.isRequired,
 		name	: PropTypes.string.isRequired,
+		downloadURL : PropTypes.string.isRequired,
 		size	: PropTypes.number.isRequired,
 		triggerParentRefresh : PropTypes.func.isRequired,
+		setIsLoading	: PropTypes.func.isRequired,
+		isAuthenticated	: PropTypes.bool.isRequired,
 	};
 
 	constructor() {
+		
 		super();		
 		this.name = "DBLinkFileInfoComponent";
 	}
 
 	onDeleteClick = (fullPath) => {
 
+		this.props.setIsLoading(true);
 		Tracer.log(`Delete ${fullPath}, ${this.props.dbLink.id}`);
+
 		DBLink.deleteFile(this.props.dbLink, this.props.name).then(() => {
 			Tracer.log(`Deleted ${fullPath}, ${this.props.dbLink.id}`);
 			this.props.triggerParentRefresh();
+		}).finally(() => {
+			this.props.setIsLoading(false);
 		});
 	}
 
@@ -34,14 +42,19 @@ class DBLinkFileInfoComponent extends React.PureComponent {
 
 		Tracer.log(`render`, this);
 
+		let buttonJsx = <span></span>;
+		if(this.props.isAuthenticated) {
+			buttonJsx = <span>
+				<button type="button" onClick={() => { this.onDeleteClick(this.props.fullPath); }}>Delete</button>
+			</span>;
+		}
+
 		return <span>
-			{this.props.name}, {Math.round(this.props.size/1024)} Kb
+			<a href={this.props.downloadURL} target="top">{this.props.name}</a>
 			&nbsp;
-			<button type="button" 
-			onClick={ () => {
-				this.onDeleteClick(this.props.fullPath);
-			} }
-			>Delete</button>
+			{Math.round(this.props.size/1024)} Kb
+			&nbsp;
+			{buttonJsx}
 		</span>;
 	}	
 }

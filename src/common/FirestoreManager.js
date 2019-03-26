@@ -73,7 +73,7 @@ class FirestoreManager {
 					// let uid = user.uid;  // The user's ID, unique to the Firebase project. Do NOT use
 					// 				 // this value to authenticate with your backend server, if
 					// 				 // you have one. Use User.getToken() instead.
-					Tracer.log(`FirestoreManager currentUser:${this.getCurrentUser().displayName}`, this);
+					Tracer.log(`FirestoreManager currentUser:${this.getCurrentUser().displayName}, udi:${this.getCurrentUserUID()}`, this);
 				}
 			} else {
 				console.log('No user change');
@@ -81,6 +81,7 @@ class FirestoreManager {
 		});
 	}
 
+	// https://grokonez.com/android/firebase-authentication-sign-up-sign-in-sign-out-verify-email-android
 	getCurrentUser() {
 
 		return firebase.auth().currentUser;
@@ -109,18 +110,28 @@ class FirestoreManager {
 		return null;			
 	}
 
+	// Return a promise
+	logOut() {
+
+		return firebase.auth().signOut();
+	}
+
 	// https://firebase.google.com/docs/auth/web/manage-users?authuser=0
 	googleLogin() {
 
-		const provider = new firebase.auth.GoogleAuthProvider();
-		firebase.auth().signInWithPopup(provider)
-			.then((result) => {
-				const user = result.user;
-				alert(`Hello ${user.displayName}`);
-			})
-			.catch((error) => {
-				Tracer.error(error, this);
-			});
+		return new Promise((resolve, reject) => {
+			const provider = new firebase.auth.GoogleAuthProvider();
+			firebase.auth().signInWithPopup(provider)
+				.then((result) => {
+					const user = result.user;
+					alert(`Hello ${user.displayName}`);
+					resolve();
+				})
+				.catch((error) => {
+					Tracer.error(error, this);
+					reject();
+				});
+		});
 	}
 
 	getFirestoreDB() {
@@ -173,7 +184,13 @@ class FirestoreManager {
 			var fileRef = this.getStorageRef().child(fileName);
 			fileRef.getMetadata().then((metadata) => {
 				Tracer.log(`GetFileMetaDataFromStorage file:${fileName} ok`);
-				resolve(metadata);
+
+				fileRef.getDownloadURL().then((downloadURL) => {
+					// Tracer.log(`fileName:${fileName}, downloadURL:${downloadURL} `);
+					metadata.downloadURL = downloadURL;
+					resolve(metadata);
+				});
+				
 			}).catch((err) => {
 				Tracer.log(`GetFileMetaDataFromStorage file:${fileName} failed ${err}`);
 				reject(err);
