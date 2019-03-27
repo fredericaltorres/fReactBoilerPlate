@@ -1,7 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 import ComponentUtil from '../common/ComponentUtil';
-
 class Button extends React.PureComponent {
 
 	static propTypes = {
@@ -9,7 +8,12 @@ class Button extends React.PureComponent {
 		onClick: PropTypes.func.isRequired,
 		text: PropTypes.string.isRequired,
 		id: PropTypes.string,
+		style: PropTypes.object,
 	};
+	static defaultProps = {
+		//style : { paddingTop:'0px', paddingBottom:'0px',paddingLeft:'3px',paddingRight:'3px' }
+		style : null
+	}
 	getId(prefix) {
 
 		if(this.props.id)
@@ -22,6 +26,7 @@ class Button extends React.PureComponent {
 			disabled={this.props.isLoading} 
 			onClick={this.props.onClick}
 			id={this.getId('but')}
+			style={this.props.style}
 			>
 				{this.props.text}
 			</button> 

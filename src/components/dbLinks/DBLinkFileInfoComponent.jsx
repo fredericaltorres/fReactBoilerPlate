@@ -42,22 +42,21 @@ class DBLinkFileInfoComponent extends React.PureComponent {
 
 		Tracer.log(`render`, this);
 
+		const buttonStyle = { paddingTop:'0px', paddingBottom:'0px',paddingLeft:'2px',paddingRight:'2px' };
 		let buttonJsx = <span></span>;
 		if(this.props.isAuthenticated) {
 			buttonJsx = <span>
-				<button type="button" onClick={() => { this.onDeleteClick(this.props.fullPath); }}>Delete</button>
+				<button type="button" style={buttonStyle}  onClick={() => { this.onDeleteClick(this.props.fullPath); }}>Delete</button>
 			</span>;
 		}
 
 		// window.open(this.href, 'mywin','left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); 
 		
-		return <span>
-			<a href={this.props.downloadURL} target="_blank">{this.props.name}</a>
-			&nbsp;
-			{Math.round(this.props.size/1024)} Kb
-			&nbsp;
-			{buttonJsx}
-		</span>;
+		return <tr>
+			<td><a href={this.props.downloadURL} target="_blank">{this.props.name}</a></td>
+			<td>{Math.round(this.props.size/1024)} Kb</td>
+			<td>{buttonJsx}</td>			
+		</tr>;
 	}	
 }
 

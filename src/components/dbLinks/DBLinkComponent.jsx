@@ -6,6 +6,9 @@ import DBLink from './dbLink';
 import ComponentUtil from '../../common/ComponentUtil';
 import { ESCAPE_KEY, ENTER_KEY } from '../../common/ComponentUtil';
 import DBLinkFileInfoComponent from './DBLinkFileInfoComponent';
+import Collapsible from 'react-collapsible';
+
+// import './DBLinkComponent.css';
 
 class DBLinkComponent extends React.PureComponent {
 
@@ -47,19 +50,22 @@ class DBLinkComponent extends React.PureComponent {
 		const dbLink = this.props.dbLink;
 		Tracer.log(`Uploading files dbLinkId:${dbLink.id}`, this);
 		const files = this.getFilesToUpLoad();
-		var promises = [];
-		files.forEach((file) => {
-			dbLink.files[file.name] = file.size;
-			promises.push(firestoreManager.uploadFileToStorage(file, dbLink.id));
-		});
-		Promise.all(promises).then(() => {
-			Tracer.log(`Done uploading files`, this);
-			DBLink.update(dbLink).then(() => {
-				Tracer.log(`Done uploading dbLink ${dbLink.id} with files meta data`, this);
-				this.triggerLoadingFileMetaData();
-				this.props.setIsLoading(false);
+		if(files.length) {
+			var promises = [];
+			files.forEach((file) => {
+				dbLink.files[file.name] = file.size;
+				promises.push(firestoreManager.uploadFileToStorage(file, dbLink.id));
 			});
-		})
+			Promise.all(promises).then(() => {
+				Tracer.log(`Done uploading files`, this);
+				DBLink.update(dbLink).then(() => {
+					Tracer.log(`Done uploading dbLink ${dbLink.id} with files meta data`, this);
+					this.triggerLoadingFileMetaData();
+					this.props.setIsLoading(false);
+				});
+			});
+		}
+		else Tracer.notifyUser(`No file to upload!`, this);
 	}
 
 	triggerLoadingFileMetaData = () => {
@@ -182,15 +188,16 @@ class DBLinkComponent extends React.PureComponent {
 		Tracer.log(`render`, this);
 
 		let linkRendering = <button type="button" className="btn btn-link" onClick={this.onOpenClick}>
-			<b>{this.getLinkForDisplay()}</b>
+			<b>{this.props.dbLink.description}</b>
 		</button>;
 
-		let descriptionRendering = <i>{this.props.dbLink.description}</i>;
+		let descriptionRendering = null;
 
 		if(this.state.isEditing) {
 
 			linkRendering = <span>
-				&nbsp;&nbsp;<input
+				<br/>
+				Link: <input
 				type="text"
 				style={{color:'red', width:'400px'}}
 				className="edit" 
@@ -202,7 +209,7 @@ class DBLinkComponent extends React.PureComponent {
 			</span>
 
 			descriptionRendering = <span>
-				&nbsp;&nbsp;<input
+				Description: <input
 				type="text"
 				style={{color:'red', width:'400px'}}
 				className="edit" 
@@ -214,6 +221,7 @@ class DBLinkComponent extends React.PureComponent {
 			</span>
 		}
 
+		let DBLinkFileCollapsibleComponentJsx = null;
 		let DBLinkFileInfoComponentJsx = <span>No files</span>;
 		const fileMetadatas = Object.values(this.state.fileMetadatas);
 
@@ -222,8 +230,7 @@ class DBLinkComponent extends React.PureComponent {
 		if(fileMetadatas.length > 0) {
 
 			DBLinkFileInfoComponentJsx = fileMetadatas.map((fileMetaData) => {
-				return <li key={fileMetaData.name} >
-					<DBLinkFileInfoComponent setIsLoading={this.props.setIsLoading} 
+				return <DBLinkFileInfoComponent setIsLoading={this.props.setIsLoading} 
 						dbLink={this.props.dbLink} 
 						key={fileMetaData.name} 
 						name={fileMetaData.name} 
@@ -231,20 +238,22 @@ class DBLinkComponent extends React.PureComponent {
 						fullPath={fileMetaData.fullPath} 
 						downloadURL={fileMetaData.downloadURL} 
 						isAuthenticated={this.props.isAuthenticated}
-						triggerParentRefresh={this.triggerLoadingFileMetaData} />
-				</li>
-				 
+						triggerParentRefresh={this.triggerLoadingFileMetaData} />;
 			});
+			
+			DBLinkFileCollapsibleComponentJsx = this.getDBLinkFileCollapsibleComponentJsx(fileMetadatas, DBLinkFileInfoComponentJsx);
 		}
+
+		const buttonStyle = { paddingTop:'1px', paddingBottom:'0px',paddingLeft:'4px',paddingRight:'4px' };
 
 		let buttonsJsx = <span></span>;
 		if(this.props.isAuthenticated) {
 			buttonsJsx = <span>
-				<button type="button" className="btn btn-info btn-sm" onClick={this.onEditClick}>Edit</button>
+				<button type="button" style={buttonStyle} className="btn btn-info btn-sm" onClick={this.onEditClick}>Edit</button>
 				&nbsp;
-				<button type="button" className="btn btn-info btn-sm" onClick={this.uploadSelectedFiles}>Upload</button>
+				<button type="button" style={buttonStyle} className="btn btn-info btn-sm" onClick={this.uploadSelectedFiles}>Upload</button>
 				&nbsp;
-				<button type="button" className="btn btn-info btn-sm" onClick={this.onDeleteClick}>Delete</button>
+				<button type="button" style={buttonStyle} className="btn btn-info btn-sm" onClick={this.onDeleteClick}>Delete</button>
 				<input type="hidden" value={this.props.dbLink.id}></input>
 			</span>;
 		}
@@ -259,13 +268,31 @@ class DBLinkComponent extends React.PureComponent {
 					{descriptionRendering}
 				</div>
 				<small>
-					<ul count={this.props.fileCount}>
-						{DBLinkFileInfoComponentJsx}
-					</ul>
+					{DBLinkFileCollapsibleComponentJsx}
 				</small>
 			</li>
 		);
 	}	
+
+	getDBLinkFileCollapsibleComponentJsx(fileMetadatas, DBLinkFileInfoComponentJsx) {
+
+		{ /* https://github.com/glennflanagan/react-collapsible */ }
+		const DBLinkFileCollapsibleComponentJsx = <Collapsible trigger={`${fileMetadatas.length} Files`} open={false}>
+			<table className="table table-sm">
+				<thead>
+					<tr>
+						<th>File</th>
+						<th>Size</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					{DBLinkFileInfoComponentJsx}
+				</tbody>
+			</table>
+		</Collapsible>;
+		return DBLinkFileCollapsibleComponentJsx;
+	}
 }
 
 export default DBLinkComponent;

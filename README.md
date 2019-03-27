@@ -20,3 +20,9 @@ This code is based on  [simple-react-app](https://www.npmjs.com/package/simple-r
 
 - Hosting deployment: 
     https://stackoverflow.com/questions/36092644/how-can-i-automate-firebase-deploy
+
+
+# React Component
+
+- [react-collapsible](https://github.com/glennflanagan/react-collapsible)
+

@@ -47,20 +47,12 @@ class DBLinksComponent extends React.PureComponent {
 			if(uid && googleFredUID !== uid) {
 				alert(`Current user logged in is not allowed as adminisatrator`);
 			}
-			// if(uid && googleFredUID == uid) {
-			// 	alert(`Adminisatrator`);
-			// }
-
 		});
 	}
 
 	isAuthenticated() {
 
 		const uid = firestoreManager.getCurrentUserUID();
-		// if(uid && googleFredUID !== uid) {
-		// 	alert(`Current user logged in is not allowed as adminisatrator`);
-		// }
-		// Tracer.log(`isAuthenticated ${googleFredUID} === ${uid}=> ${googleFredUID === uid}`);
 		return googleFredUID == uid;
 	}
 
@@ -113,7 +105,7 @@ class DBLinksComponent extends React.PureComponent {
 
 		if(this.isAuthenticated()) {
 			return <div>
-				<Button isLoading={isLoading} text="Log out" onClick={this.googleLogout} />
+				<Button isLoading={isLoading} text="Log out" onClick={this.googleLogout}  />
 				&nbsp;
 				<Button isLoading={isLoading} text="New" onClick={this.addBlankLinks} />
 				&nbsp;
@@ -128,8 +120,8 @@ class DBLinksComponent extends React.PureComponent {
 		else {
 			return <div>
 			<Button isLoading={isLoading} text="Google Login" onClick={this.googleLogin} />
-			&nbsp;
-			<Button isLoading={isLoading} text="Test" onClick={this.isAuthenticated} />
+			{/* &nbsp;
+			<Button isLoading={isLoading} text="Test" onClick={this.isAuthenticated} /> */}
 			</div>;
 		}
 	}
@@ -166,7 +158,7 @@ class DBLinksComponent extends React.PureComponent {
 		Tracer.log(`render isLoading:${this.state.isLoading}`, this);
 		const authenticatedUserDisplayName = firestoreManager.getCurrentUserDisplayName();
 
-		const statusMessage = this.state.isLoading ? "Busy. . . " : `${this.state.DBLinks.length} links. User:${authenticatedUserDisplayName}, Ready...`;
+		const statusMessage = this.state.isLoading ? "Busy. . . " : `${this.state.DBLinks.length} links. User: ${authenticatedUserDisplayName}, Ready . . .`;
 		let statusClassName = this.state.isLoading ? "alert alert-warning" : "alert alert-success";
 
 		return (
@@ -175,8 +167,8 @@ class DBLinksComponent extends React.PureComponent {
 
 				{this.getAddButtonAlertJsx(this.state.isLoading, true)}
 				
-				<div className={statusClassName} role="alert" style={{ marginTop:"2px"}}>
-					<strong>Status </strong> : {statusMessage}
+				<div className={statusClassName} role="alert" style={{ marginTop:"2px", padding:'2px'}}>
+					<strong>&nbsp;Status </strong> : {statusMessage}
 				</div>
 				<ul className="list-group" style={{marginTop:'0px'}}>
 					{this.renderDBLinksToJsx(this.state.DBLinks)}
