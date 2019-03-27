@@ -8,8 +8,7 @@ import ComponentUtil from '../../common/ComponentUtil';
 import DBLink from './dbLink';
 import Tracer from "../../common/Tracer";
 import DBLinkComponent from './DBLinkComponent';
-
-const googleFredUID = "105884141315293539957";
+import { max } from "moment";
 
 class DBLinksComponent extends React.PureComponent {
 
@@ -42,18 +41,20 @@ class DBLinksComponent extends React.PureComponent {
 	googleLogin = () => {
 
 		firestoreManager.googleLogin().then(() => {
-			ComponentUtil.forceRefresh(this); 
-			const uid = firestoreManager.getCurrentUserUID();
-			if(uid && googleFredUID !== uid) {
-				alert(`Current user logged in is not allowed as adminisatrator`);
-			}
+
+			this.LoadAuthorisationRoles();
+			//ComponentUtil.forceRefresh(this);
 		});
 	}
 
-	isAuthenticated() {
+	isAuthenticated () {
 
-		const uid = firestoreManager.getCurrentUserUID();
-		return googleFredUID == uid;
+		return firestoreManager.getCurrentUser() != null;
+	}
+
+	isAdmin() {
+
+		return firestoreManager.getCurrentIsAdmin();
 	}
 
 	monitorDBLinksCollection() {
@@ -70,7 +71,16 @@ class DBLinksComponent extends React.PureComponent {
 
 	test = () => {
 
-		alert(this.isAuthenticated());
+		this.LoadAuthorisationRoles();
+	}
+
+	LoadAuthorisationRoles = () => {
+
+		return firestoreManager.currentUserHasRole(firestoreManager.ADMIN_ROLE).then((isAdmin) => {
+
+			Tracer.log(`Admin mode detected for current user`, this);
+			this.monitorDBLinksCollection();
+		})
 	}
 
 	stopMonitorDBLinksCollection() {
@@ -79,8 +89,20 @@ class DBLinksComponent extends React.PureComponent {
 	}
 
 	componentDidMount() {
-	
-		this.monitorDBLinksCollection();
+		let tryCount = 0;
+		const maxTry = 10;
+		const timerId = setInterval(() => {
+			if(firestoreManager.isCurrentUserLoaded()) {
+				this.LoadAuthorisationRoles();	
+				clearInterval(timerId);
+			}
+			Tracer.log(`Wait for current user to be loaded ${tryCount}`);
+			tryCount += 1;
+			if(tryCount > maxTry) {
+				clearInterval(timerId);
+				Tracer.warn(`Stop waiting for authenticated user...`, this);
+			}
+		}, 1000);
 	}
 	
 	addBlankLinks = () => {
@@ -119,9 +141,7 @@ class DBLinksComponent extends React.PureComponent {
 		}
 		else {
 			return <div>
-			<Button isLoading={isLoading} text="Google Login" onClick={this.googleLogin} />
-			{/* &nbsp;
-			<Button isLoading={isLoading} text="Test" onClick={this.isAuthenticated} /> */}
+			<Button text="Google Login" onClick={this.googleLogin} />			
 			</div>;
 		}
 	}
@@ -137,7 +157,7 @@ class DBLinksComponent extends React.PureComponent {
 		return <DBLinkComponent 
 			fileCount={fileCount}
 			dbLink={linkComponent}
-			isAuthenticated={this.isAuthenticated()}
+			isAdmin={this.isAdmin()}
 			key={linkComponent.id}
 			deleteDbLink={DBLink.delete}
 			setIsLoading={this.setIsLoading}

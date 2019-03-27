@@ -16,7 +16,7 @@ class DBLinkFileInfoComponent extends React.PureComponent {
 		size	: PropTypes.number.isRequired,
 		triggerParentRefresh : PropTypes.func.isRequired,
 		setIsLoading	: PropTypes.func.isRequired,
-		isAuthenticated	: PropTypes.bool.isRequired,
+		isAdmin	: PropTypes.bool.isRequired,
 	};
 
 	constructor() {
@@ -44,7 +44,7 @@ class DBLinkFileInfoComponent extends React.PureComponent {
 
 		const buttonStyle = { paddingTop:'0px', paddingBottom:'0px',paddingLeft:'2px',paddingRight:'2px' };
 		let buttonJsx = <span></span>;
-		if(this.props.isAuthenticated) {
+		if(this.props.isAdmin) {
 			buttonJsx = <span>
 				<button type="button" style={buttonStyle}  onClick={() => { this.onDeleteClick(this.props.fullPath); }}>Delete</button>
 			</span>;

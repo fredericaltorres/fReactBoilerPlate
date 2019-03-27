@@ -39,7 +39,7 @@ const getSettings = () => {
 class FirestoreManager {
 
 	static _initialized = false;
-
+	
 	// Static object to store snapshot unsusbcribe method, to be able to 
 	// unsubscribe and stop monitoring data
 	static _monitoredSnapshot = {
@@ -48,8 +48,11 @@ class FirestoreManager {
 	
 	constructor() {
 
+		this.ADMIN_ROLE = "administrator";
+
 		this._settings = getSettings();
 		this.batchModeOn = false;
+		this._currentUserAuthAuth = null;
 
 		if(!FirestoreManager._initialized) {
 			
@@ -64,6 +67,7 @@ class FirestoreManager {
 	__setUpOnAuthStateChanged () {
 
 		firebase.auth().onAuthStateChanged((user) => {
+
 			if (user) {
 				if (user != null) {
 					// let name = user.displayName;
@@ -81,10 +85,46 @@ class FirestoreManager {
 		});
 	}
 
+	currentUserHasRole(role) {
+
+		return new Promise((resolve, reject) => {
+
+			if(this._currentUserAuthAuth === null) {
+
+				this._loadUserAuthAuth( this.getCurrentUserUID() ).then( (currentUserAuthAuth) => {
+
+					this._currentUserAuthAuth = currentUserAuthAuth;
+					resolve(this.__currentUserHasRole(role));
+				});
+			}
+			else {
+				resolve(this.__currentUserHasRole(role));
+			}
+		});
+	}
+
+	__currentUserHasRole(role) {
+
+		if(!this._currentUserAuthAuth)
+			return false;
+
+		return this._currentUserAuthAuth.roles.indexOf(role) !== -1;
+	}
+
+	getCurrentIsAdmin() {
+
+		return this.__currentUserHasRole(this.ADMIN_ROLE);		
+	}
+
 	// https://grokonez.com/android/firebase-authentication-sign-up-sign-in-sign-out-verify-email-android
 	getCurrentUser() {
 
 		return firebase.auth().currentUser;
+	}
+
+	isCurrentUserLoaded() {
+
+		return this.getCurrentUser() !== null;
 	}
 
 	getCurrentUserUID() {
@@ -111,8 +151,14 @@ class FirestoreManager {
 	}
 
 	// Return a promise
-	logOut() {
+	_loadUserAuthAuth(uid) {
 
+		return this.loadDocument('_users', uid);
+	}
+
+	// Return a promise
+	logOut() {
+		this._currentUserAuthAuth = null;
 		return firebase.auth().signOut();
 	}
 
@@ -120,7 +166,9 @@ class FirestoreManager {
 	googleLogin() {
 
 		return new Promise((resolve, reject) => {
+
 			const provider = new firebase.auth.GoogleAuthProvider();
+
 			firebase.auth().signInWithPopup(provider)
 				.then((result) => {
 					const user = result.user;

@@ -4,7 +4,7 @@ import ComponentUtil from '../common/ComponentUtil';
 class Button extends React.PureComponent {
 
 	static propTypes = {
-		isLoading: PropTypes.bool.isRequired,
+		isLoading: PropTypes.bool,
 		onClick: PropTypes.func.isRequired,
 		text: PropTypes.string.isRequired,
 		id: PropTypes.string,
@@ -12,7 +12,8 @@ class Button extends React.PureComponent {
 	};
 	static defaultProps = {
 		//style : { paddingTop:'0px', paddingBottom:'0px',paddingLeft:'3px',paddingRight:'3px' }
-		style : null
+		style : null,
+		isLoading: false
 	}
 	getId(prefix) {
 

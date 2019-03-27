@@ -18,7 +18,7 @@ class DBLinkComponent extends React.PureComponent {
 		fileCount		: PropTypes.number.isRequired, // Just passe to force a refresh when we add/remove a file
 		deleteDbLink	: PropTypes.func.isRequired,
 		setIsLoading	: PropTypes.func.isRequired,
-		isAuthenticated	: PropTypes.bool.isRequired,
+		isAdmin	: PropTypes.bool.isRequired,
 	};
 
 	state = {
@@ -41,7 +41,7 @@ class DBLinkComponent extends React.PureComponent {
 
 		ComponentUtil.forceRefresh(this, { isEditing: this.state.isEditing, editText: this.props.link } );
 		this.triggerLoadingFileMetaData();		
-		Tracer.log(`isAuthenticated:${this.props.isAuthenticated} >>>>>>>>>>>>>`, this)
+
 	}
 
 	uploadSelectedFiles = () => {
@@ -237,7 +237,7 @@ class DBLinkComponent extends React.PureComponent {
 						size={fileMetaData.size} 
 						fullPath={fileMetaData.fullPath} 
 						downloadURL={fileMetaData.downloadURL} 
-						isAuthenticated={this.props.isAuthenticated}
+						isAdmin={this.props.isAdmin}
 						triggerParentRefresh={this.triggerLoadingFileMetaData} />;
 			});
 			
@@ -247,7 +247,7 @@ class DBLinkComponent extends React.PureComponent {
 		const buttonStyle = { paddingTop:'1px', paddingBottom:'0px',paddingLeft:'4px',paddingRight:'4px' };
 
 		let buttonsJsx = <span></span>;
-		if(this.props.isAuthenticated) {
+		if(this.props.isAdmin) {
 			buttonsJsx = <span>
 				<button type="button" style={buttonStyle} className="btn btn-info btn-sm" onClick={this.onEditClick}>Edit</button>
 				&nbsp;
