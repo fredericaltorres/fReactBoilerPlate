@@ -184,86 +184,35 @@ class DBLinkComponent extends React.PureComponent {
 	}
 
 	render() {
-		
-		Tracer.log(`render`, this);
 
+		const fileMetadatas = Object.values(this.state.fileMetadatas);
+		Tracer.log(`render this.state.fileMetadatas length:${this.state.fileMetadatas.length}`, this);
+
+		// Generate jsx for non edit mode
 		let linkRendering = <button type="button" className="btn btn-link" onClick={this.onOpenClick}>
 			<b>{this.props.dbLink.description}</b>
 		</button>;
 
 		let descriptionRendering = null;
 
-		if(this.state.isEditing) {
+		if(this.state.isEditing) { // Jsx for edit mode
 
 			linkRendering = <span>
-				<br/>
-				Link: <input
-				type="text"
-				style={{color:'red', width:'400px'}}
-				className="edit" 
-				value={this.getLink()}
-				onChange={this.props.isLoading ? () => {} : this.handleLinkChange} 
-				onKeyDown={this.handleKeyDown}
-				ref={(input) => { this.editField = input; }} 
-				/>
-			</span>
+				<br/> Link: <input type="text" style={{color:'red', width:'400px'}} className="edit" value={this.getLink()} onChange={this.props.isLoading ? () => {} : this.handleLinkChange}  onKeyDown={this.handleKeyDown} ref={(input) => { this.editField = input; }} />
+			</span>;
 
 			descriptionRendering = <span>
-				Description: <input
-				type="text"
-				style={{color:'red', width:'400px'}}
-				className="edit" 
-				value={this.getDescription()}
-				onChange={this.props.isLoading ? () => {} : this.handleDescriptionChange} 
-				onKeyDown={this.handleKeyDown}
-				ref={(input) => { this.editDescription = input; }} 
-				/>
-			</span>
-		}
-
-		let DBLinkFileCollapsibleComponentJsx = null;
-		let DBLinkFileInfoComponentJsx = <span>No files</span>;
-		const fileMetadatas = Object.values(this.state.fileMetadatas);
-
-		Tracer.log(`this.state.fileMetadatas length:${this.state.fileMetadatas.length}`, this);
-
-		if(fileMetadatas.length > 0) {
-
-			DBLinkFileInfoComponentJsx = fileMetadatas.map((fileMetaData) => {
-				return <DBLinkFileInfoComponent setIsLoading={this.props.setIsLoading} 
-						dbLink={this.props.dbLink} 
-						key={fileMetaData.name} 
-						name={fileMetaData.name} 
-						size={fileMetaData.size} 
-						fullPath={fileMetaData.fullPath} 
-						downloadURL={fileMetaData.downloadURL} 
-						isAdmin={this.props.isAdmin}
-						triggerParentRefresh={this.triggerLoadingFileMetaData} />;
-			});
-			
-			DBLinkFileCollapsibleComponentJsx = this.getDBLinkFileCollapsibleComponentJsx(fileMetadatas, DBLinkFileInfoComponentJsx);
-		}
-
-		const buttonStyle = { paddingTop:'1px', paddingBottom:'0px',paddingLeft:'4px',paddingRight:'4px' };
-
-		let buttonsJsx = <span></span>;
-		if(this.props.isAdmin) {
-			buttonsJsx = <span>
-				<button type="button" style={buttonStyle} className="btn btn-info btn-sm" onClick={this.onEditClick}>Edit</button>
-				&nbsp;
-				<button type="button" style={buttonStyle} className="btn btn-info btn-sm" onClick={this.uploadSelectedFiles}>Upload</button>
-				&nbsp;
-				<button type="button" style={buttonStyle} className="btn btn-info btn-sm" onClick={this.onDeleteClick}>Delete</button>
-				<input type="hidden" value={this.props.dbLink.id}></input>
+				Description: <input type="text" style={{color:'red', width:'400px'}} className="edit"  value={this.getDescription()} onChange={this.props.isLoading ? () => {} : this.handleDescriptionChange} onKeyDown={this.handleKeyDown} ref={(input) => { this.editDescription = input; }}  />
 			</span>;
 		}
 
+		let DBLinkFileCollapsibleComponentJsx = this.getDbLinkFilesJsx(fileMetadatas);
+		let buttonsJsx = this.getButtonsJsx();
+
 		return (
 			<li key={this.props.dbLink.id} id={this.props.dbLink.id} className="list-group-item">
-
 				{buttonsJsx}
 				{linkRendering}
-
 				<div style={{marginTop:"3px"}}>
 					{descriptionRendering}
 				</div>
@@ -273,6 +222,36 @@ class DBLinkComponent extends React.PureComponent {
 			</li>
 		);
 	}	
+
+	getDbLinkFilesJsx(fileMetadatas) {
+
+		let DBLinkFileCollapsibleComponentJsx = null; // Assume by default that there is no file associated with this dbLink
+		let DBLinkFileInfoComponentJsx = <span>No files</span>;
+		if (fileMetadatas.length > 0) {
+			DBLinkFileInfoComponentJsx = fileMetadatas.map((fileMetaData) => {
+				return <DBLinkFileInfoComponent setIsLoading={this.props.setIsLoading} dbLink={this.props.dbLink} key={fileMetaData.name} name={fileMetaData.name} size={fileMetaData.size} fullPath={fileMetaData.fullPath} downloadURL={fileMetaData.downloadURL} isAdmin={this.props.isAdmin} triggerParentRefresh={this.triggerLoadingFileMetaData} />;
+			});
+			DBLinkFileCollapsibleComponentJsx = this.getDBLinkFileCollapsibleComponentJsx(fileMetadatas, DBLinkFileInfoComponentJsx);
+		}
+		return DBLinkFileCollapsibleComponentJsx;
+	}
+
+	getButtonsJsx() {
+
+		const buttonStyle = { paddingTop: '1px', paddingBottom: '0px', paddingLeft: '4px', paddingRight: '4px' };
+		let buttonsJsx = <span></span>;
+		if (this.props.isAdmin) {
+			buttonsJsx = <span>
+				<button type="button" style={buttonStyle} className="btn btn-info btn-sm" onClick={this.onEditClick}>Edit</button>
+				&nbsp;
+				<button type="button" style={buttonStyle} className="btn btn-info btn-sm" onClick={this.uploadSelectedFiles}>Upload</button>
+				&nbsp;
+				<button type="button" style={buttonStyle} className="btn btn-info btn-sm" onClick={this.onDeleteClick}>Delete</button>
+				<input type="hidden" value={this.props.dbLink.id}></input>
+			</span>;
+		}
+		return buttonsJsx;
+	}
 
 	getDBLinkFileCollapsibleComponentJsx(fileMetadatas, DBLinkFileInfoComponentJsx) {
 
