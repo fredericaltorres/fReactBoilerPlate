@@ -22,6 +22,7 @@ class DBLinksComponent extends React.PureComponent {
 		editText :'',
 		isLoading: true,
 		DBLinks: [],
+		fileMetadatas: [],
 	};
 
 	constructor(props) {
@@ -43,7 +44,6 @@ class DBLinksComponent extends React.PureComponent {
 		firestoreManager.googleLogin().then(() => {
 
 			this.LoadAuthorisationRoles();
-			//ComponentUtil.forceRefresh(this);
 		});
 	}
 
@@ -56,14 +56,25 @@ class DBLinksComponent extends React.PureComponent {
 
 		return firestoreManager.getCurrentIsAdmin();
 	}
-
+	
 	monitorDBLinksCollection() {
 
 		firestoreManager.monitorQuery(
 			DBLink.getCollectionName(),
 			(records) => { 
 				Tracer.log(`collection ${DBLink.getCollectionName()} change detected, ${records.length} record(s)`, this);
-				ComponentUtil.forceRefresh(this, { DBLinks: records, isLoading: false } ); 
+				ComponentUtil.forceRefresh(this, { DBLinks: records, isLoading: false }, 
+					() => {
+						const promises = this.state.DBLinks.map((dbLink) => {
+							return DBLink.loadFileMetaData(dbLink);
+						});
+						Promise.all(promises).then((fileMetadatas) => {
+							ComponentUtil.forceRefresh(this, { fileMetadatas }, () => {
+								console.log(`APP STATE:${JSON.stringify(this.state)}`);
+							});
+						});
+					}
+				); 
 			}, 
 			'createdAt'
 		);
@@ -99,21 +110,6 @@ class DBLinksComponent extends React.PureComponent {
 	componentDidMount() {
 
 		this.LoadAuthorisationRoles();	
-
-		// let tryCount = 0;
-		// const maxTry = 10;
-		// const timerId = setInterval(() => {
-		// 	if(firestoreManager.isCurrentUserLoaded()) {
-		// 		this.LoadAuthorisationRoles();	
-		// 		clearInterval(timerId);
-		// 	}
-		// 	Tracer.log(`Wait for current user to be loaded ${tryCount}`);
-		// 	tryCount += 1;
-		// 	if(tryCount > maxTry) {
-		// 		clearInterval(timerId);
-		// 		Tracer.warn(`Stop waiting for authenticated user...`, this);
-		// 	}
-		// }, 1000);
 	}
 	
 	addBlankLinks = () => {
@@ -126,7 +122,6 @@ class DBLinksComponent extends React.PureComponent {
 
 		const marker = "*****************************************";
 		console.log(marker);
-		// console.dir(this.state.DBLinks);
 		console.log(JSON.stringify(this.state.DBLinks, null, 2));
 		console.log(marker);
 		alert('See result in browser console');
@@ -164,10 +159,17 @@ class DBLinksComponent extends React.PureComponent {
 
 	renderDBLinkToJsx = (linkComponent) => {
 		
+		let fileMetadata = this.state.fileMetadatas[linkComponent.id];
+		if(!fileMetadata) 
+			fileMetadata = [];
+		else
+			console.log(`PASS FILEMETADATA ${JSON.stringify(fileMetadata)}`);
+			
 		const fileCount = Object.keys(linkComponent.files).length;
 		return <DBLinkComponent 
-			fileCount={fileCount}
+			fileCount={fileCount} // pass fileCount to force a refresh if the number of file changed
 			dbLink={linkComponent}
+			fileMetadata={fileMetadata}
 			isAdmin={this.isAdmin()}
 			key={linkComponent.id}
 			deleteDbLink={DBLink.deleteWithFiles}
@@ -180,7 +182,7 @@ class DBLinksComponent extends React.PureComponent {
 		return dbLinks.map((dbLink) => {
 			return this.renderDBLinkToJsx(dbLink);
 		});
-	}    
+	}
 
 	// --- Misc Events ---
 

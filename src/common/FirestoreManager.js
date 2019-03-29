@@ -181,11 +181,13 @@ class FirestoreManager {
 
 			firebase.auth().signInWithPopup(provider)
 				.then((result) => {
+
 					const user = result.user;
 					alert(`Hello ${user.displayName}`);
 					resolve();
 				})
 				.catch((error) => {
+
 					Tracer.error(error, this);
 					reject();
 				});
@@ -221,13 +223,16 @@ class FirestoreManager {
 
 			const storageRef = this.getStorageRef();
 			var mountainsRef = storageRef.child(fileName);
-			mountainsRef.putString(text).then((snapshot) => {
-				Tracer.log(`text file ${fileName} created`, this);
-				resolve(fileName);
-			}).catch((err) => {
-				Tracer.error(`text file ${fileName} creation failed`);
-				reject(fileName);
-			});
+			mountainsRef.putString(text)
+				.then((snapshot) => {
+
+					Tracer.log(`text file ${fileName} created`, this);
+					resolve(fileName);
+				}).catch((err) => {
+
+					Tracer.error(`text file ${fileName} creation failed`);
+					reject(fileName);
+				});
 		});
 	}
 
@@ -240,19 +245,19 @@ class FirestoreManager {
 		return new Promise((resolve, reject) => {
 
 			var fileRef = this.getStorageRef().child(fileName);
-			fileRef.getMetadata().then((metadata) => {
-				Tracer.log(`GetFileMetaDataFromStorage file:${fileName} ok`, this);
+			fileRef.getMetadata()
+				.then((metadata) => {
 
-				fileRef.getDownloadURL().then((downloadURL) => {
-					// Tracer.log(`fileName:${fileName}, downloadURL:${downloadURL} `);
-					metadata.downloadURL = downloadURL;
-					resolve(metadata);
+					Tracer.log(`GetFileMetaDataFromStorage file:${fileName} ok`, this);
+					fileRef.getDownloadURL().then((downloadURL) => {
+						metadata.downloadURL = downloadURL;
+						resolve(metadata);
+					});
+				}).catch((err) => {
+
+					Tracer.log(`GetFileMetaDataFromStorage file:${fileName} failed ${err}`, this);
+					reject(err);
 				});
-				
-			}).catch((err) => {
-				Tracer.log(`GetFileMetaDataFromStorage file:${fileName} failed ${err}`, this);
-				reject(err);
-			});
 		});
 	}
 
@@ -264,13 +269,16 @@ class FirestoreManager {
 		return new Promise((resolve, reject) => {
 
 			var fileRef = this.getStorageRef().child(fileName);
-			fileRef.delete().then(() => {
-				Tracer.log(`deleteFileFromStorage file:${fileName} deleted`, this);
-				resolve(true);
-			}).catch((err) => {
-				Tracer.log(`deleteFileFromStorage file:${fileName} failed ${err}`, this);
-				reject(err);
-			});
+			fileRef.delete()
+				.then(() => {
+
+					Tracer.log(`deleteFileFromStorage file:${fileName} deleted`, this);
+					resolve(true);
+				}).catch((err) => {
+
+					Tracer.log(`deleteFileFromStorage file:${fileName} failed ${err}`, this);
+					reject(err);
+				});
 		});
 	}
 
@@ -284,13 +292,16 @@ class FirestoreManager {
 
 			const storageRef = this.getStorageRef();
 			var mountainsRef = storageRef.child(fileName);
-			mountainsRef.put(fileObject).then((snapshot) => {
-				Tracer.log(`File ${fileName} uploaded`, this);
-				resolve(fileName);
-			}).catch((err) => {
-				Tracer.error(`File ${fileName} uploaded failed`);
-				reject(fileName);
-			});
+			mountainsRef.put(fileObject)
+				.then((snapshot) => {
+
+					Tracer.log(`File ${fileName} uploaded`, this);
+					resolve(fileName);
+				}).catch((err) => {
+					
+					Tracer.error(`File ${fileName} uploaded failed`);
+					reject(fileName);
+				});
 		});
 	}
 
@@ -473,8 +484,10 @@ class FirestoreManager {
 		const data = Object.assign({}, oData);
 		const longId = data[idFieldName];
 		const idStringForTracing = `${idFieldName}:${longId}`;
-		Tracer.log(`updateRecord ${idStringForTracing}`, this);				
 		const id = this.extractId(longId);
+
+		Tracer.log(`updateRecord ${idStringForTracing}`, this);				
+
 		data[DEFAULT_ID_FIELD_NAME] = id; // Remove the collection name from the id
 		// The id property is stored twice as the document key and as the property id
 		const docRef = this.getCollection(collection).doc(id); // Load the record

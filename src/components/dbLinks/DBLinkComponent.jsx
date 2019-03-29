@@ -15,9 +15,10 @@ class DBLinkComponent extends React.PureComponent {
 	static propTypes = {		
 
 		dbLink : DBLink.shape(),
-		fileCount		: PropTypes.number.isRequired, // Just passe to force a refresh when we add/remove a file
-		deleteDbLink	: PropTypes.func.isRequired,
-		setIsLoading	: PropTypes.func.isRequired,
+		fileMetadata : PropTypes.arrayOf(PropTypes.object).isRequired,
+		fileCount : PropTypes.number.isRequired, // Just passe to force a refresh when we add/remove a file
+		deleteDbLink : PropTypes.func.isRequired,
+		setIsLoading : PropTypes.func.isRequired,
 		isAdmin	: PropTypes.bool.isRequired,
 	};
 
@@ -26,7 +27,6 @@ class DBLinkComponent extends React.PureComponent {
 		isEditing: false,
 		editText: null,
 		editDescription: null,
-		fileMetadatas:[]
 	};
 
 	LINK_MAX_LENGTH_FOR_DISPLAY = 55;
@@ -70,33 +70,33 @@ class DBLinkComponent extends React.PureComponent {
 
 	triggerLoadingFileMetaData = () => {
 
-		this.props.setIsLoading(true);
-		const promises = [];
-		const files = Object.keys(this.props.dbLink.files);
-		files.forEach((fileName) => {
-			promises.push(firestoreManager.GetFileMetaDataFromStorage(fileName, this.props.dbLink.id));
-		});		
-		Promise.all(promises).then((metadatas) => {
-			ComponentUtil.forceRefresh(this, { fileMetadatas : metadatas } );
-		}).finally(() => {
-			this.props.setIsLoading(false);
-		});
+		// this.props.setIsLoading(true);
+		// const promises = [];
+		// const files = Object.keys(this.props.dbLink.files);
+		// files.forEach((fileName) => {
+		// 	promises.push(firestoreManager.GetFileMetaDataFromStorage(fileName, this.props.dbLink.id));
+		// });		
+		// Promise.all(promises).then((metadatas) => {
+		// 	ComponentUtil.forceRefresh(this, { fileMetadatas : metadatas } );
+		// }).finally(() => {
+		// 	this.props.setIsLoading(false);
+		// });
 		
-		const metaDataSample = {
-			"type": "file",
-			"bucket": "fredtodo-f553b.appspot.com",
-			"generation": "1553469831203489",
-			"metageneration": "1",
-			"fullPath": "DBLinks/05bf0902e73e3/ExportedClient.xml",
-			"name": "ExportedClient.xml",
-			"size": 805667,
-			"timeCreated": "2019-03-24T23:23:51.203Z",
-			"updated": "2019-03-24T23:23:51.203Z",
-			"md5Hash": "yZVF/2w9KoHaH2rzJe+2AA==",
-			"contentDisposition": "inline; filename*=utf-8''ExportedClient.xml",
-			"contentEncoding": "identity",
-			"contentType": "text/xml"
-		}
+		// const metaDataSample = {
+		// 	"type": "file",
+		// 	"bucket": "fredtodo-f553b.appspot.com",
+		// 	"generation": "1553469831203489",
+		// 	"metageneration": "1",
+		// 	"fullPath": "DBLinks/05bf0902e73e3/ExportedClient.xml",
+		// 	"name": "ExportedClient.xml",
+		// 	"size": 805667,
+		// 	"timeCreated": "2019-03-24T23:23:51.203Z",
+		// 	"updated": "2019-03-24T23:23:51.203Z",
+		// 	"md5Hash": "yZVF/2w9KoHaH2rzJe+2AA==",
+		// 	"contentDisposition": "inline; filename*=utf-8''ExportedClient.xml",
+		// 	"contentEncoding": "identity",
+		// 	"contentType": "text/xml"
+		// }
 	}
 
 	onDeleteClick = () => {
@@ -185,8 +185,10 @@ class DBLinkComponent extends React.PureComponent {
 
 	render() {
 
-		const fileMetadatas = Object.values(this.state.fileMetadatas);
-		Tracer.log(`render this.state.fileMetadatas length:${this.state.fileMetadatas.length}`, this);
+		let fileMetadatas = [];
+		if(this.props.fileMetadatas)
+			fileMetadatas = Object.values(this.props.fileMetadatas);
+		Tracer.log(`render this.props.fileMetadatas length:${fileMetadatas.length}`, this);
 
 		// Generate jsx for non edit mode
 		let inputBoxesJsx  = <button type="button" className="btn btn-link" onClick={this.onOpenClick}>
@@ -196,7 +198,6 @@ class DBLinkComponent extends React.PureComponent {
 		let descriptionRendering = null;
 
 		if(this.state.isEditing) { // Jsx for edit mode
-
 
 			const inpuBoxWidth = '500px';
 
@@ -229,7 +230,7 @@ class DBLinkComponent extends React.PureComponent {
 		let DBLinkFileInfoComponentJsx = <span>No files</span>;
 		if (fileMetadatas.length > 0) {
 			DBLinkFileInfoComponentJsx = fileMetadatas.map((fileMetaData) => {
-				return <DBLinkFileInfoComponent setIsLoading={this.props.setIsLoading} dbLink={this.props.dbLink} key={fileMetaData.name} name={fileMetaData.name} size={fileMetaData.size} fullPath={fileMetaData.fullPath} downloadURL={fileMetaData.downloadURL} isAdmin={this.props.isAdmin} triggerParentRefresh={this.triggerLoadingFileMetaData} />;
+				return <DBLinkFileInfoComponent dbLink={this.props.dbLink} setIsLoading={this.props.setIsLoading} key={fileMetaData.name} name={fileMetaData.name} size={fileMetaData.size} fullPath={fileMetaData.fullPath} downloadURL={fileMetaData.downloadURL} isAdmin={this.props.isAdmin} triggerParentRefresh={this.triggerLoadingFileMetaData} />;
 			});
 			DBLinkFileCollapsibleComponentJsx = this.getDBLinkFileCollapsibleComponentJsx(fileMetadatas, DBLinkFileInfoComponentJsx);
 		}

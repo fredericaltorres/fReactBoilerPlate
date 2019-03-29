@@ -99,5 +99,28 @@ export class DBLink extends FireStoreDocumentBaseClass {
 				.catch(() => { reject(); });
 		});
 	}
+	loadFileMetaData = (dbLink) => {
+
+		return new Promise((resolve, reject) => {
+
+			const promises = [];
+			const files = Object.keys(dbLink.files);
+			files.forEach((fileName) => {
+				promises.push(firestoreManager.GetFileMetaDataFromStorage(fileName, dbLink.id));
+			});
+			Promise.all(promises)
+				.then((fileMetadatas) => {
+					const fileMap = {};
+					fileMetadatas.forEach((fileMetadata) => {
+						if(fileMap[dbLink.id] === undefined) fileMap[dbLink.id] = {};
+						fileMap[dbLink.id][fileMetadata.name] = fileMetadata;
+					});
+					resolve(fileMap);
+				})
+				.catch((err) => {
+					reject(err);
+				});
+		});
+	}
 };
 export default new DBLink();
