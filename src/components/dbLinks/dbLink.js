@@ -99,7 +99,7 @@ export class DBLink extends FireStoreDocumentBaseClass {
 				.catch(() => { reject(); });
 		});
 	}
-	loadFileMetaData = (dbLink) => {
+	loadFilesMetaData = (dbLink) => {
 
 		return new Promise((resolve, reject) => {
 

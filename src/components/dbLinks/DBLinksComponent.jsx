@@ -64,24 +64,29 @@ class DBLinksComponent extends React.PureComponent {
 		firestoreManager.monitorQuery(
 			DBLink.getCollectionName(),
 			(records) => { 
+
 				Tracer.log(`collection ${DBLink.getCollectionName()} change detected, ${records.length} record(s)`, this);
-				ComponentUtil.forceRefresh(this, { DBLinks: records, isLoading: false }, 
-					() => {
+
+				// Force a first refresh now that we have the DBLinks, we still need to load the file metadata
+				ComponentUtil.forceRefresh(this, { DBLinks: records },  () => {
+
+						// Load the file metadata
 						const promises = this.state.DBLinks.map((dbLink) => {
-							return DBLink.loadFileMetaData(dbLink);
+
+							return DBLink.loadFilesMetaData(dbLink);
 						});
 						Promise.all(promises).then((fileMetadatas) => {
 
+							// Reshaffle the file metadata structure before storing it into the componenent state
 							const fileMetadatasMap = {};
 							fileMetadatas.forEach((fileMetadataObject) => {
+
 								const dbLinkId = Object.keys(fileMetadataObject)[0];
 								const fileMetadata = fileMetadataObject[dbLinkId];
 								fileMetadatasMap[dbLinkId] = fileMetadata;
 							});
 							
-							ComponentUtil.forceRefresh(this, { fileMetadatas:fileMetadatasMap }, () => {
-								// console.log(`APP STATE:${JSON.stringify(this.state)}`);
-							});
+							ComponentUtil.forceRefresh(this, { fileMetadatas:fileMetadatasMap, isLoading: false } );
 						});
 					}
 				); 
