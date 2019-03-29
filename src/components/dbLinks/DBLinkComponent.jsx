@@ -15,7 +15,7 @@ class DBLinkComponent extends React.PureComponent {
 	static propTypes = {		
 
 		dbLink : DBLink.shape(),
-		fileMetadata : PropTypes.arrayOf(PropTypes.object).isRequired,
+		fileMetadatas : PropTypes.object.isRequired,
 		fileCount : PropTypes.number.isRequired, // Just passe to force a refresh when we add/remove a file
 		deleteDbLink : PropTypes.func.isRequired,
 		setIsLoading : PropTypes.func.isRequired,

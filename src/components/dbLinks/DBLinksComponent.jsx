@@ -22,7 +22,7 @@ class DBLinksComponent extends React.PureComponent {
 		editText :'',
 		isLoading: true,
 		DBLinks: [],
-		fileMetadatas: [],
+		fileMetadatas: {}, // Map with key is dbLinkId containing a map where the key is the filename
 	};
 
 	constructor(props) {
@@ -69,8 +69,17 @@ class DBLinksComponent extends React.PureComponent {
 							return DBLink.loadFileMetaData(dbLink);
 						});
 						Promise.all(promises).then((fileMetadatas) => {
-							ComponentUtil.forceRefresh(this, { fileMetadatas }, () => {
-								console.log(`APP STATE:${JSON.stringify(this.state)}`);
+
+							const fileMetadatasMap = {};
+							fileMetadatas.forEach((fileMetadataObject) => {
+								const dbLinkId = Object.keys(fileMetadataObject)[0];
+								const fileMetadata = fileMetadataObject[dbLinkId];
+								fileMetadatasMap[dbLinkId] = fileMetadata;
+							});
+
+							// console.log(`SET FILEMETADATA ${JSON.stringify(fileMetadatas)} +++++++++++++++++++++++++++`);
+							ComponentUtil.forceRefresh(this, { fileMetadatas:fileMetadatasMap }, () => {
+								// console.log(`APP STATE:${JSON.stringify(this.state)}`);
 							});
 						});
 					}
@@ -158,18 +167,19 @@ class DBLinksComponent extends React.PureComponent {
 	}
 
 	renderDBLinkToJsx = (linkComponent) => {
-		
+
+		// if(Object.keys(this.state.fileMetadatas).length>0)
+		// 	debugger;
+
 		let fileMetadata = this.state.fileMetadatas[linkComponent.id];
 		if(!fileMetadata) 
-			fileMetadata = [];
-		else
-			console.log(`PASS FILEMETADATA ${JSON.stringify(fileMetadata)}`);
-			
+			fileMetadata = {};
+		
 		const fileCount = Object.keys(linkComponent.files).length;
 		return <DBLinkComponent 
 			fileCount={fileCount} // pass fileCount to force a refresh if the number of file changed
 			dbLink={linkComponent}
-			fileMetadata={fileMetadata}
+			fileMetadatas={fileMetadata}
 			isAdmin={this.isAdmin()}
 			key={linkComponent.id}
 			deleteDbLink={DBLink.deleteWithFiles}

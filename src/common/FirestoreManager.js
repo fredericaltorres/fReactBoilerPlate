@@ -240,7 +240,7 @@ class FirestoreManager {
 	GetFileMetaDataFromStorage(fileNameOnly, parentFolder = null) {
 
 		const fileName = this.getStorageFullPath(parentFolder, fileNameOnly);
-		Tracer.log(`GetFileMetaDataFromStorage file:${fileName}`);
+		Tracer.log(`GetFileMetaDataFromStorage file:${fileName}`, this);
 
 		return new Promise((resolve, reject) => {
 
