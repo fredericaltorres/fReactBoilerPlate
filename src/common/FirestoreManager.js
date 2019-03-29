@@ -42,9 +42,7 @@ class FirestoreManager {
 	
 	// Static object to store snapshot unsusbcribe method, to be able to 
 	// unsubscribe and stop monitoring data
-	static _monitoredSnapshot = {
-
-	};
+	static _monitoredSnapshot = { };
 	
 	constructor() {
 
@@ -53,6 +51,8 @@ class FirestoreManager {
 		this._settings = getSettings();
 		this.batchModeOn = false;
 		this._currentUserAuthAuth = null;
+		this.onCurrentUserLoadedCallBack = null;
+		this.name = "FirestoreManager";
 
 		if(!FirestoreManager._initialized) {
 			
@@ -69,7 +69,12 @@ class FirestoreManager {
 		firebase.auth().onAuthStateChanged((user) => {
 
 			if (user) {
-				if (user != null) {
+				if (user == null) {
+					this._currentUserAuthAuth = null;
+					if(this.onCurrentUserLoadedCallBack)
+						this.onCurrentUserLoadedCallBack(null);					
+				}
+				else {
 					// let name = user.displayName;
 					// let email = user.email;
 					// let photoUrl = user.photoURL;
@@ -78,9 +83,14 @@ class FirestoreManager {
 					// 				 // this value to authenticate with your backend server, if
 					// 				 // you have one. Use User.getToken() instead.
 					Tracer.log(`FirestoreManager currentUser:${this.getCurrentUser().displayName}, udi:${this.getCurrentUserUID()}`, this);
+					if(this.onCurrentUserLoadedCallBack)
+						this.onCurrentUserLoadedCallBack(this.getCurrentUser());
 				}
 			} else {
-				console.log('No user change');
+				console.log('No user change or log out');
+				this._currentUserAuthAuth = null;
+				if(this.onCurrentUserLoadedCallBack)
+					this.onCurrentUserLoadedCallBack(null);
 			}
 		});
 	}
@@ -205,14 +215,14 @@ class FirestoreManager {
 
 	uploadTextAsFileToStorage(fileName, text) {
 
-		Tracer.log(`upload text file:${fileName}`);
+		Tracer.log(`upload text file:${fileName}`, this);
 
 		return new Promise((resolve, reject) => {
 
 			const storageRef = this.getStorageRef();
 			var mountainsRef = storageRef.child(fileName);
 			mountainsRef.putString(text).then((snapshot) => {
-				Tracer.log(`text file ${fileName} created`);
+				Tracer.log(`text file ${fileName} created`, this);
 				resolve(fileName);
 			}).catch((err) => {
 				Tracer.error(`text file ${fileName} creation failed`);
@@ -231,7 +241,7 @@ class FirestoreManager {
 
 			var fileRef = this.getStorageRef().child(fileName);
 			fileRef.getMetadata().then((metadata) => {
-				Tracer.log(`GetFileMetaDataFromStorage file:${fileName} ok`);
+				Tracer.log(`GetFileMetaDataFromStorage file:${fileName} ok`, this);
 
 				fileRef.getDownloadURL().then((downloadURL) => {
 					// Tracer.log(`fileName:${fileName}, downloadURL:${downloadURL} `);
@@ -240,7 +250,7 @@ class FirestoreManager {
 				});
 				
 			}).catch((err) => {
-				Tracer.log(`GetFileMetaDataFromStorage file:${fileName} failed ${err}`);
+				Tracer.log(`GetFileMetaDataFromStorage file:${fileName} failed ${err}`, this);
 				reject(err);
 			});
 		});
@@ -249,16 +259,16 @@ class FirestoreManager {
 	deleteFileFromStorage(fileNameOnly, parentFolder = null) {
 
 		const fileName = this.getStorageFullPath(parentFolder, fileNameOnly);
-		Tracer.log(`deleteFileFromStorage file:${fileName}`);
+		Tracer.log(`deleteFileFromStorage file:${fileName}`, this);
 
 		return new Promise((resolve, reject) => {
 
 			var fileRef = this.getStorageRef().child(fileName);
 			fileRef.delete().then(() => {
-				Tracer.log(`deleteFileFromStorage file:${fileName} ok`);
+				Tracer.log(`deleteFileFromStorage file:${fileName} deleted`, this);
 				resolve(true);
 			}).catch((err) => {
-				Tracer.log(`deleteFileFromStorage file:${fileName} failed ${err}`);
+				Tracer.log(`deleteFileFromStorage file:${fileName} failed ${err}`, this);
 				reject(err);
 			});
 		});
@@ -268,17 +278,17 @@ class FirestoreManager {
 	uploadFileToStorage(fileObject, parentFolder = null) {
 
 		const fileName = this.getStorageFullPath(parentFolder, fileObject.name);
-		Tracer.log(`uploadFileToStorage file:${fileName}`);
+		Tracer.log(`uploadFileToStorage file:${fileName}`, this);
 
 		return new Promise((resolve, reject) => {
 
 			const storageRef = this.getStorageRef();
 			var mountainsRef = storageRef.child(fileName);
 			mountainsRef.put(fileObject).then((snapshot) => {
-				Tracer.log(`File ${fileName} created`);
+				Tracer.log(`File ${fileName} uploaded`, this);
 				resolve(fileName);
 			}).catch((err) => {
-				Tracer.error(`File ${fileName} creation failed`);
+				Tracer.error(`File ${fileName} uploaded failed`);
 				reject(fileName);
 			});
 		});
@@ -341,7 +351,7 @@ class FirestoreManager {
 		
 		if(FirestoreManager._monitoredSnapshot[collection]) {
 
-			Tracer.log(`Unsubscribe monitored snapshot:${collection}`);
+			Tracer.log(`Unsubscribe monitored snapshot:${collection}`, this);
 			this.__unsubscribeMonitoredSnapshot(FirestoreManager._monitoredSnapshot[collection]);
 			delete FirestoreManager._monitoredSnapshot[collection];
 		}

@@ -28,10 +28,10 @@ class DBLinkFileInfoComponent extends React.PureComponent {
 	onDeleteClick = (fullPath) => {
 
 		this.props.setIsLoading(true);
-		Tracer.log(`Delete ${fullPath}, ${this.props.dbLink.id}`);
+		Tracer.log(`Delete file ${fullPath}, ${this.props.dbLink.id}`);
 
 		DBLink.deleteFile(this.props.dbLink, this.props.name).then(() => {
-			Tracer.log(`Deleted ${fullPath}, ${this.props.dbLink.id}`);
+			Tracer.log(`Deleted file ${fullPath}, ${this.props.dbLink.id}`);
 			this.props.triggerParentRefresh();
 		}).finally(() => {
 			this.props.setIsLoading(false);

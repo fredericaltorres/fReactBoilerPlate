@@ -52,13 +52,13 @@ class DBLinkComponent extends React.PureComponent {
 		const files = this.getFilesToUpLoad();
 		if(files.length) {
 			var promises = [];
-			files.forEach((file) => {
-				dbLink.files[file.name] = file.size;
+			files.forEach((file) => { // Upload all the files
+				dbLink.files[file.name] = file.size; // update  the files array in memory only
 				promises.push(firestoreManager.uploadFileToStorage(file, dbLink.id));
 			});
 			Promise.all(promises).then(() => {
 				Tracer.log(`Done uploading files`, this);
-				DBLink.update(dbLink).then(() => {
+				DBLink.update(dbLink).then(() => { // Now update the db link instance
 					Tracer.log(`Done uploading dbLink ${dbLink.id} with files meta data`, this);
 					this.triggerLoadingFileMetaData();
 					this.props.setIsLoading(false);
@@ -103,7 +103,7 @@ class DBLinkComponent extends React.PureComponent {
 
 		if(confirm(`Delete link?`)) {
 			this.props.setIsLoading(true);
-			this.props.deleteDbLink(this.props.dbLink.id).finally(() => {
+			this.props.deleteDbLink(this.props.dbLink).finally(() => {
 				this.props.setIsLoading(false);
 			});
 		}
@@ -189,7 +189,7 @@ class DBLinkComponent extends React.PureComponent {
 		Tracer.log(`render this.state.fileMetadatas length:${this.state.fileMetadatas.length}`, this);
 
 		// Generate jsx for non edit mode
-		let linkRendering = <button type="button" className="btn btn-link" onClick={this.onOpenClick}>
+		let inputBoxesJsx  = <button type="button" className="btn btn-link" onClick={this.onOpenClick}>
 			<b>{this.props.dbLink.description}</b>
 		</button>;
 
@@ -197,27 +197,27 @@ class DBLinkComponent extends React.PureComponent {
 
 		if(this.state.isEditing) { // Jsx for edit mode
 
-			linkRendering = <span>
-				<br/> Link: <input type="text" style={{color:'red', width:'400px'}} className="edit" value={this.getLink()} onChange={this.props.isLoading ? () => {} : this.handleLinkChange}  onKeyDown={this.handleKeyDown} ref={(input) => { this.editField = input; }} />
-			</span>;
 
-			descriptionRendering = <span>
-				Description: <input type="text" style={{color:'red', width:'400px'}} className="edit"  value={this.getDescription()} onChange={this.props.isLoading ? () => {} : this.handleDescriptionChange} onKeyDown={this.handleKeyDown} ref={(input) => { this.editDescription = input; }}  />
-			</span>;
+			const inpuBoxWidth = '500px';
+
+			inputBoxesJsx =<form>
+				<div className="form-group">
+					<label htmlFor="inputBoxLinkId">Link (id:{this.props.dbLink.id}) </label>
+					<input id="inputBoxLinkId" type="text" style={{ width:inpuBoxWidth}} className="form-control" value={this.getLink()} onChange={this.props.isLoading ? () => {} : this.handleLinkChange}  onKeyDown={this.handleKeyDown} ref={(input) => { this.editField = input; }} />
+				</div>
+				<div className="form-group">
+					<label htmlFor="inputBoxDescriptionId">Description</label>
+					<input id="inputBoxDescriptionId" type="text" style={{ width:inpuBoxWidth}} className="form-control"  value={this.getDescription()} onChange={this.props.isLoading ? () => {} : this.handleDescriptionChange} onKeyDown={this.handleKeyDown} ref={(input) => { this.editDescription = input; }}  />
+				</div>
+			</form>;
 		}
-
-		let DBLinkFileCollapsibleComponentJsx = this.getDbLinkFilesJsx(fileMetadatas);
-		let buttonsJsx = this.getButtonsJsx();
 
 		return (
 			<li key={this.props.dbLink.id} id={this.props.dbLink.id} className="list-group-item">
-				{buttonsJsx}
-				{linkRendering}
-				<div style={{marginTop:"3px"}}>
-					{descriptionRendering}
-				</div>
+				{this.getButtonsJsx()}
+				{inputBoxesJsx}
 				<small>
-					{DBLinkFileCollapsibleComponentJsx}
+					{this.getDbLinkFilesJsx(fileMetadatas)}
 				</small>
 			</li>
 		);
@@ -237,7 +237,6 @@ class DBLinkComponent extends React.PureComponent {
 	}
 
 	getButtonsJsx() {
-
 		const buttonStyle = { paddingTop: '1px', paddingBottom: '0px', paddingLeft: '4px', paddingRight: '4px' };
 		let buttonsJsx = <span></span>;
 		if (this.props.isAdmin) {

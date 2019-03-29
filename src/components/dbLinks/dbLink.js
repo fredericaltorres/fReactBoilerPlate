@@ -62,18 +62,41 @@ export class DBLink extends FireStoreDocumentBaseClass {
 		const r = maxOrder + 1;
 		return r;
 	}	
-	deleteFile = (dbLink, fileName) => {
+	deleteFile = (dbLink, fileName, updateDbLinkInstance = true) => {
 
 		return new Promise((resolve, reject) => {
 
 			firestoreManager.deleteFileFromStorage(fileName, dbLink.id)
 				.then(() => {
-					delete dbLink.files[fileName];					
-					this.update(dbLink)
-						.then(() => { resolve(); })
-						.catch((err) => { reject(err); });
+					if(updateDbLinkInstance) {
+						delete dbLink.files[fileName];					
+						this.update(dbLink)
+							.then(() => { resolve(); })
+							.catch((err) => { reject(err); });
+					}
+					else resolve();
 				})
 				.catch((err) => { reject(err); });
+		});
+	}
+	deleteWithFiles = (dbLink) => {
+
+		Tracer.log(`deleteWithFiles ${dbLink.id}`, this);
+
+		return new Promise((resolve, reject) => {
+
+			const promises = [];
+			Object.keys(dbLink.files).forEach((fileName) => {
+				promises.push(this.deleteFile(dbLink, fileName, false));
+			});			
+			Promise.all(promises) // First delete all the files and wait for it
+				.then(() => {
+					this.delete(dbLink.id).then(() => { // Then delete the db link instance
+						resolve();
+					})
+					.catch(() => { reject(); });					
+				})
+				.catch(() => { reject(); });
 		});
 	}
 };

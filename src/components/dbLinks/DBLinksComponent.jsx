@@ -73,36 +73,47 @@ class DBLinksComponent extends React.PureComponent {
 
 		this.LoadAuthorisationRoles();
 	}
-
-	LoadAuthorisationRoles = () => {
-
-		return firestoreManager.currentUserHasRole(firestoreManager.ADMIN_ROLE).then((isAdmin) => {
-
-			Tracer.log(`Admin mode detected for current user`, this);
-			this.monitorDBLinksCollection();
-		})
-	}
-
+	
 	stopMonitorDBLinksCollection() {
 
 		firestoreManager.stopMonitorQuery(ToDo.getCollectionName());
 	}
 
+	LoadAuthorisationRoles = () => {
+
+		if(firestoreManager.isCurrentUserLoaded()) {
+
+			return firestoreManager.currentUserHasRole(firestoreManager.ADMIN_ROLE).then((isAdmin) => {
+
+				Tracer.log(`Admin mode detected for current user @@@@@@@@@@@@`, this);
+				this.monitorDBLinksCollection();
+			});
+		}
+		else {
+			Tracer.log(`Current user not loaded, waiting for it, execution mode Anonymous`, this);
+			this.monitorDBLinksCollection();
+			firestoreManager.onCurrentUserLoadedCallBack = this.LoadAuthorisationRoles;
+		}
+	}
+
 	componentDidMount() {
-		let tryCount = 0;
-		const maxTry = 10;
-		const timerId = setInterval(() => {
-			if(firestoreManager.isCurrentUserLoaded()) {
-				this.LoadAuthorisationRoles();	
-				clearInterval(timerId);
-			}
-			Tracer.log(`Wait for current user to be loaded ${tryCount}`);
-			tryCount += 1;
-			if(tryCount > maxTry) {
-				clearInterval(timerId);
-				Tracer.warn(`Stop waiting for authenticated user...`, this);
-			}
-		}, 1000);
+
+		this.LoadAuthorisationRoles();	
+
+		// let tryCount = 0;
+		// const maxTry = 10;
+		// const timerId = setInterval(() => {
+		// 	if(firestoreManager.isCurrentUserLoaded()) {
+		// 		this.LoadAuthorisationRoles();	
+		// 		clearInterval(timerId);
+		// 	}
+		// 	Tracer.log(`Wait for current user to be loaded ${tryCount}`);
+		// 	tryCount += 1;
+		// 	if(tryCount > maxTry) {
+		// 		clearInterval(timerId);
+		// 		Tracer.warn(`Stop waiting for authenticated user...`, this);
+		// 	}
+		// }, 1000);
 	}
 	
 	addBlankLinks = () => {
@@ -113,7 +124,7 @@ class DBLinksComponent extends React.PureComponent {
 
 	export = () => {
 
-		const marker = "******************************************************************************************";
+		const marker = "*****************************************";
 		console.log(marker);
 		// console.dir(this.state.DBLinks);
 		console.log(JSON.stringify(this.state.DBLinks, null, 2));
@@ -159,7 +170,7 @@ class DBLinksComponent extends React.PureComponent {
 			dbLink={linkComponent}
 			isAdmin={this.isAdmin()}
 			key={linkComponent.id}
-			deleteDbLink={DBLink.delete}
+			deleteDbLink={DBLink.deleteWithFiles}
 			setIsLoading={this.setIsLoading}
 		/>;
 	}
@@ -176,9 +187,8 @@ class DBLinksComponent extends React.PureComponent {
 	render() {
 
 		Tracer.log(`render isLoading:${this.state.isLoading}`, this);
-		const authenticatedUserDisplayName = firestoreManager.getCurrentUserDisplayName();
-
-		const statusMessage = this.state.isLoading ? "Busy. . . " : `${this.state.DBLinks.length} links. User: ${authenticatedUserDisplayName}, Ready . . .`;
+		const authenticatedUserDisplayName = firestoreManager.isCurrentUserLoaded() ? firestoreManager.getCurrentUserDisplayName() : "Anonymous";
+		const statusMessage = this.state.isLoading ? "Busy. . . " : `${this.state.DBLinks.length} links. User: ${authenticatedUserDisplayName},  Ready . . .`;
 		let statusClassName = this.state.isLoading ? "alert alert-warning" : "alert alert-success";
 
 		return (
