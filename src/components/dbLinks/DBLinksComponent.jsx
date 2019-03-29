@@ -43,18 +43,20 @@ class DBLinksComponent extends React.PureComponent {
 
 		firestoreManager.googleLogin().then(() => {
 
-			this.LoadAuthorisationRoles();
+			this.loadAuthorizationRoles();
 		});
 	}
 
+	// Return true if we have a google logged in user which may or may not be an admin
 	isAuthenticated () {
 
-		return firestoreManager.getCurrentUser() != null;
+		return firestoreManager.isCurrentUserLoaded();		
 	}
 
-	isAdmin() {
+	// Return true if the current user loaded is authenticated and an admin
+	isCurrentUserLoadedAdmin() {
 
-		return firestoreManager.getCurrentIsAdmin();
+		return firestoreManager.getCurrentUserLoadedIsAdmin();
 	}
 	
 	monitorDBLinksCollection() {
@@ -76,8 +78,7 @@ class DBLinksComponent extends React.PureComponent {
 								const fileMetadata = fileMetadataObject[dbLinkId];
 								fileMetadatasMap[dbLinkId] = fileMetadata;
 							});
-
-							// console.log(`SET FILEMETADATA ${JSON.stringify(fileMetadatas)} +++++++++++++++++++++++++++`);
+							
 							ComponentUtil.forceRefresh(this, { fileMetadatas:fileMetadatasMap }, () => {
 								// console.log(`APP STATE:${JSON.stringify(this.state)}`);
 							});
@@ -91,7 +92,7 @@ class DBLinksComponent extends React.PureComponent {
 
 	test = () => {
 
-		this.LoadAuthorisationRoles();
+		this.loadAuthorizationRoles();
 	}
 	
 	stopMonitorDBLinksCollection() {
@@ -99,32 +100,38 @@ class DBLinksComponent extends React.PureComponent {
 		firestoreManager.stopMonitorQuery(ToDo.getCollectionName());
 	}
 
-	LoadAuthorisationRoles = () => {
+	loadAuthorizationRoles = () => {
 
 		if(firestoreManager.isCurrentUserLoaded()) {
 
 			return firestoreManager.currentUserHasRole(firestoreManager.ADMIN_ROLE).then((isAdmin) => {
 
-				Tracer.log(`Admin mode detected for current user @@@@@@@@@@@@`, this);
+				
+				if(isAdmin) {
+					Tracer.warn(`Admin mode detected for current user:${firestoreManager.getCurrentUserDisplayName()}`, this);
+				}
+				else {
+					Tracer.warn(`Admin mode NOT detected for current user:${firestoreManager.getCurrentUserDisplayName()}`, this);
+				}
 				this.monitorDBLinksCollection();
 			});
 		}
 		else {
 			Tracer.log(`Current user not loaded, waiting for it, execution mode Anonymous`, this);
 			this.monitorDBLinksCollection();
-			firestoreManager.onCurrentUserLoadedCallBack = this.LoadAuthorisationRoles;
+			firestoreManager.onCurrentUserLoadedCallBack = this.loadAuthorizationRoles;
 		}
 	}
 
 	componentDidMount() {
 
-		this.LoadAuthorisationRoles();	
+		this.loadAuthorizationRoles();	
 	}
 	
 	addBlankLinks = () => {
 
 		const order = DBLink.getMaxOrder(this.state.DBLinks);
-		DBLink.add(DBLink.create('<new>', '', order));
+		DBLink.add(DBLink.create('<new>', '<description>', order));
 	}
 
 	export = () => {
@@ -140,24 +147,27 @@ class DBLinksComponent extends React.PureComponent {
 
 		if(!render) return null;
 
-		if(this.isAuthenticated()) {
+		const logOutButtonJsx = <Button isLoading={isLoading} text="Log out" onClick={this.googleLogout}  />;
+		if(this.isCurrentUserLoadedAdmin()) {
 			return <div>
-				<Button isLoading={isLoading} text="Log out" onClick={this.googleLogout}  />
+				{logOutButtonJsx}
 				&nbsp;
 				<Button isLoading={isLoading} text="New" onClick={this.addBlankLinks} />
 				&nbsp;
 				<Button isLoading={isLoading} text="Export" onClick={this.export} />
 				&nbsp;
-				<Button isLoading={isLoading} text="Test" onClick={this.test} />
-				&nbsp;				
+				{/* <Button isLoading={isLoading} text="Test" onClick={this.test} /> &nbsp; */}
 				{/* https://developer.mozilla.org/en-US/docs/Web/API/FileList */}
 				<input id="fileItem" multiple type="file"></input>
 			</div>;
 		}
 		else {
-			return <div>
-			<Button text="Google Login" onClick={this.googleLogin} />			
-			</div>;
+			if(this.isAuthenticated()) {
+				return logOutButtonJsx
+			}
+			else {
+				return <Button text="Google Login" onClick={this.googleLogin} />;
+			}
 		}
 	}
 
@@ -180,7 +190,7 @@ class DBLinksComponent extends React.PureComponent {
 			fileCount={fileCount} // pass fileCount to force a refresh if the number of file changed
 			dbLink={linkComponent}
 			fileMetadatas={fileMetadata}
-			isAdmin={this.isAdmin()}
+			isAdmin={this.isCurrentUserLoadedAdmin()}
 			key={linkComponent.id}
 			deleteDbLink={DBLink.deleteWithFiles}
 			setIsLoading={this.setIsLoading}

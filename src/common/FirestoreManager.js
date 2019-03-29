@@ -82,7 +82,12 @@ class FirestoreManager {
 					// let uid = user.uid;  // The user's ID, unique to the Firebase project. Do NOT use
 					// 				 // this value to authenticate with your backend server, if
 					// 				 // you have one. Use User.getToken() instead.
+
 					Tracer.log(`FirestoreManager currentUser:${this.getCurrentUser().displayName}, udi:${this.getCurrentUserUID()}`, this);
+
+					// https://firebase.google.com/docs/reference/js/firebase.User#getIdToken
+					// this.getCurrentUser().getIdToken().then(data => alert(data));
+
 					if(this.onCurrentUserLoadedCallBack)
 						this.onCurrentUserLoadedCallBack(this.getCurrentUser());
 				}
@@ -95,16 +100,25 @@ class FirestoreManager {
 		});
 	}
 
+	// If the current user auth auth record is not loaded then load it first, the return the
+	// answer in a promise
 	currentUserHasRole(role) {
 
 		return new Promise((resolve, reject) => {
 
 			if(this._currentUserAuthAuth === null) {
 
-				this._loadUserAuthAuth( this.getCurrentUserUID() ).then( (currentUserAuthAuth) => {
+				this.__loadUserAuthAuth( this.getCurrentUserUID() ).then( (currentUserAuthAuth) => {
 
-					this._currentUserAuthAuth = currentUserAuthAuth;
-					resolve(this.__currentUserHasRole(role));
+					if(currentUserAuthAuth === null) { // current record in _users collection was not found
+						
+						resolve(false);
+					}
+					else {
+
+						this._currentUserAuthAuth = currentUserAuthAuth;
+						resolve(this.__currentUserHasRole(role));
+					}
 				});
 			}
 			else {
@@ -121,7 +135,9 @@ class FirestoreManager {
 		return this._currentUserAuthAuth.roles.indexOf(role) !== -1;
 	}
 
-	getCurrentIsAdmin() {
+	// return true if the current user already loaded is an admin.
+	// if the user is not loaded, there is no call to load the user auth auth data
+	getCurrentUserLoadedIsAdmin() {
 
 		return this.__currentUserHasRole(this.ADMIN_ROLE);		
 	}
@@ -161,9 +177,9 @@ class FirestoreManager {
 	}
 
 	// Return a promise
-	_loadUserAuthAuth(uid) {
+	__loadUserAuthAuth(uid) {
 
-		return this.loadDocument('_users', uid);
+		return this.loadDocument('_users', uid, null, false);
 	}
 
 	// Return a promise
@@ -248,7 +264,7 @@ class FirestoreManager {
 			fileRef.getMetadata()
 				.then((metadata) => {
 
-					Tracer.log(`GetFileMetaDataFromStorage file:${fileName} ok`, this);
+					// Tracer.log(`GetFileMetaDataFromStorage file:${fileName} ok`, this);
 					fileRef.getDownloadURL().then((downloadURL) => {
 						metadata.downloadURL = downloadURL;
 						resolve(metadata);
@@ -404,44 +420,53 @@ class FirestoreManager {
 		return true;
 	}
 
-	loadDocument(collection, documentId, subCollections = null) {
+	loadDocument(collection, documentId, subCollections = null, expectDocumentToExist = true) {
 
 		Tracer.log(`loadDocument(${collection}, ${documentId})`, this);
 		return new Promise((resolve, reject) => {
 			
 			const docRef = this.getCollection(collection).doc(documentId);
-			docRef.get().then(doc => {
+			docRef.get()
+				.then(doc => {
 
-				const item = this.__rebuildDocument(doc);
-				if(item === null) {
-					Tracer.throw(`loadDocument(${collection}, ${documentId}) failed`);
-				}
+					const item = this.__rebuildDocument(doc);
 
-				if(TypeUtil.isArray(subCollections)) {  // Load sub collections
+					if(item === null) { // document was not found
 
-					const promises = [];
+						if(expectDocumentToExist) 
+							Tracer.throw(`loadDocument(${collection}, ${documentId}) failed`);
+						else
+							resolve(null); // return null to notify caller that document was not found and it was expected
+					}
 
-					subCollections.forEach((subCol) => {
+					if(TypeUtil.isArray(subCollections)) {  // Load sub collections
 
-						const subColQuery = `${item.id}/${subCol}`;
-						Tracer.log(`loadDocument(${collection}, ${documentId}, SubCollection:(${subColQuery}) )`, this);
-						promises.push(this.loadDocuments(subColQuery, null, null, DEFAULT_MAX_RECORD, subCol));
-					});
-					Promise.all(promises).then((results) => {
+						const promises = [];
 
-						results.forEach((result) => {
+						subCollections.forEach((subCol) => {
 
-							const key = Object.keys(result)[0];
-							const val = result[key];
-							item[key] = val;
+							const subColQuery = `${item.id}/${subCol}`;
+							Tracer.log(`loadDocument(${collection}, ${documentId}, SubCollection:(${subColQuery}) )`, this);
+							promises.push(this.loadDocuments(subColQuery, null, null, DEFAULT_MAX_RECORD, subCol));
 						});
+						Promise.all(promises).then((results) => {
+
+							results.forEach((result) => {
+
+								const key = Object.keys(result)[0];
+								const val = result[key];
+								item[key] = val;
+							});
+							resolve(item);
+						});
+					}
+					else {
 						resolve(item);
-					});
-				}
-				else {
-					resolve(item);
-				}
-			});
+					}
+				})
+				.catch((err) => { // We do not expect this catch to trigger
+					Tracer.throw(`loadDocument(${collection}, ${documentId}) failed unexpected error:${err}`);
+				});
 		});
 	}
 
