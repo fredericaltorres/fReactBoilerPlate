@@ -9,7 +9,7 @@ import { ESCAPE_KEY, ENTER_KEY } from '../../common/ComponentUtil';
 import DBLinkFileInfoComponent from './DBLinkFileInfoComponent';
 import Collapsible from 'react-collapsible';
 
-// import './DBLinkComponent.css';
+import './DBLinkComponent.scss';
 
 class DBLinkComponent extends React.PureComponent {
 
@@ -180,7 +180,8 @@ class DBLinkComponent extends React.PureComponent {
 
 		// Generate jsx for non edit mode
 		let inputBoxesJsx  =  <span>
-			&nbsp;<i>{this.props.dbLink.category}</i><button type="button" className="btn btn-link" onClick={this.onOpenClick}>
+			&nbsp;<i>{this.props.dbLink.category}</i>
+			<button type="button" className="btn btn-link" onClick={this.onOpenClick}>
 			<b>{this.props.dbLink.description}</b>
 			</button>
 		</span>;

@@ -16,65 +16,6 @@
     <!-- Firebase must be loaded before REACT start -->
     <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase.js"></script>
 
-
-
-    <style>
-  
-      .Collapsible {
-        background-color: white; }
-      
-      .Collapsible__contentInner {
-        padding: 10px;
-        border: 1px solid #ebebeb;
-        border-top: 0; }
-        .Collapsible__contentInner p {
-          margin-bottom: 10px;
-          font-size: 14px;
-          line-height: 20px; }
-          .Collapsible__contentInner p:last-child {
-            margin-bottom: 0; }
-      
-      .Collapsible__trigger {
-        display: block;
-        font-weight: 400;
-        text-decoration: none;
-        color: #333333;
-        position: relative;
-        border: 1px solid white;
-        padding: 10px;
-        background: #00ac9d;
-        color: white; }
-        .Collapsible__trigger:after {
-          font-family: 'FontAwesome';
-          content: '\f107';
-          position: absolute;
-          right: 10px;
-          top: 10px;
-          display: block;
-          transition: transform 300ms; }
-        .Collapsible__trigger.is-open:after {
-          transform: rotateZ(180deg); }
-        .Collapsible__trigger.is-disabled {
-          opacity: 0.5;
-          background-color: grey; }
-      
-      .CustomTriggerCSS {
-        background-color: lightcoral;
-        transition: background-color 200ms ease; }
-      
-      .CustomTriggerCSS--open {
-        background-color: darkslateblue; }
-      
-      .Collapsible__custom-sibling {
-        padding: 5px;
-        font-size: 12px;
-        background-color: #CBB700;
-        color: black; }
-      </style>
-      
-      
-
-
   </head>
   <body>
     <div id="root"></div>
@@ -84,42 +25,3 @@
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-
-<script >
-/*
-
-const firestoreManager = new FirestoreManager();
-
-function getPostsCollection() {
-    return firestoreManager.getCollection('posts');
-}
-function getToDoItemsCollection() {
-    return firestoreManager.getCollection('todoItems');
-}
-function loadAllTodoItems() {
-    console.log(`loadAllTodoItems`);
-    const dbToDoItems = getToDoItemsCollection();
-    const query = dbToDoItems.orderBy('createdAt', 'desc').limit(100);
-    query.get().then(todoItems => {
-        todoItems.forEach(doc => {
-            const data = doc.data();
-            alert(JSON.stringify(data));
-        });
-    });   
-}
-function loadTodo(id) {
-    console.log(`Loading todo id`+id);
-    const dbToDoItems = getToDoItemsCollection();
-    const todo = dbToDoItems.doc(id);
-    todo.onSnapshot(function(todoDoc) {
-        const todoDocData = todoDoc.data();
-        alert(JSON.stringify(todoDocData));
-    });
-}
-function displayTodo() {
-  // loadTodo('671nnbOMv92r1bJfApw7');
-  loadAllTodoItems();
-}
-displayTodo();
-*/
-</script>

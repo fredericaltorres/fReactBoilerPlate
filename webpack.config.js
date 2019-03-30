@@ -1,40 +1,51 @@
+/*
+  Web Pack plugins 
+    https://webpack.js.org/plugins/copy-webpack-plugin
+*/
 const path = require('path');
 const webpack = require('webpack');
 const HTMLWebpackPlugin = require('html-webpack-plugin');
-
+const CopyPlugin = require('copy-webpack-plugin');
 const dev = process.env.NODE_ENV !== 'production';
 
-console.log(`webpack.config.js >>`);
-console.log(`ENVIRONMENT:${process.env.NODE_ENV}`);
+console.log(`[webpack.config.js]Building ENVIRONMENT:${process.env.NODE_ENV}`);
 
 const HTMLWebpackPluginConfig = new HTMLWebpackPlugin({
-  template: path.join(__dirname, '/src/index.html'),
-  filename: 'index.html',
-  inject: 'body',
+
+    template: path.join(__dirname, '/src/index.html'),
+    filename: 'index.html',
+    inject: 'body',
 });
 
-const WebConfigWebpackPluginConfig = new HTMLWebpackPlugin({
-  template: path.join(__dirname, '/src/web.config'),
-  filename: 'web.config',
-  inject: 'body',
-});
+const CopyWebConfigFile = new CopyPlugin([
+  
+  { from: './src/web.config', to: './' },
+]);
 
 const DefinePluginConfig = new webpack.DefinePlugin({
-  'process.env.NODE_ENV': JSON.stringify('production'),
+
+    'process.env.NODE_ENV': JSON.stringify('production'),
 });
 
 module.exports = {
+
   devServer: {
+
     host: 'localhost',
     port: '3000',
     hot: true,
+
     headers: {
-      'Access-Control-Allow-Origin': '*',
+
+        'Access-Control-Allow-Origin': '*',
     },
     historyApiFallback: true,
   },
+
   entry: ['react-hot-loader/patch', path.join(__dirname, '/src/index.jsx')],
+
   module: {
+
     rules: [
       {
         test: /\.jsx?$/,
@@ -54,22 +65,28 @@ module.exports = {
       },
     ],
   },
+
   resolve: {
-    extensions: ['.js', '.jsx'],
+
+      extensions: ['.js', '.jsx'],
   },
+
   output: {
-    filename: 'index.js',
-    path: path.join(__dirname, '/build'),
+
+      filename: 'index.js',
+      path: path.join(__dirname, '/build'),
   },
+
   mode: dev ? 'development' : 'production',
-  plugins: dev
-    ? [
+  
+  plugins: dev ? [
       HTMLWebpackPluginConfig,
       new webpack.HotModuleReplacementPlugin(),
     ]
     : [
         HTMLWebpackPluginConfig, 
         DefinePluginConfig,
+        CopyWebConfigFile
         // WebConfigWebpackPluginConfig
-      ],
+      ]
 };
