@@ -101,6 +101,11 @@ class DBLinkComponent extends React.PureComponent {
 		ComponentUtil.forceRefresh(this, { editDescription : event.target.value });
 	}
 
+	handleCategoryChange = (event) => {
+
+		ComponentUtil.forceRefresh(this, { editCategory : event.target.value });
+	}
+
 	handleKeyDown = (event) => {
 		
 		const self = this;
@@ -114,6 +119,8 @@ class DBLinkComponent extends React.PureComponent {
 				var dbLink = this.props.dbLink;
 				dbLink.link = this.getLink();
 				dbLink.description = this.getDescription();
+				dbLink.category = this.getCategory();
+				debugger;
 				DBLink.update(dbLink).then(() => {
 					self.onEditClick();
 				});
@@ -149,6 +156,13 @@ class DBLinkComponent extends React.PureComponent {
 		return this.props.dbLink.description;
 	}
 
+	getCategory() {
+
+		if(this.state.editCategory)
+			return this.state.editCategory;
+		return this.props.dbLink.category;
+	}
+
 	render() {
 
 		let fileMetadatas = [];
@@ -158,7 +172,7 @@ class DBLinkComponent extends React.PureComponent {
 
 		// Generate jsx for non edit mode
 		let inputBoxesJsx  = <button type="button" className="btn btn-link" onClick={this.onOpenClick}>
-			<b>{this.props.dbLink.description}</b>
+			<b>{this.props.dbLink.category} - {this.props.dbLink.description}</b>
 		</button>;
 
 		let descriptionRendering = null;
@@ -175,6 +189,18 @@ class DBLinkComponent extends React.PureComponent {
 				<div className="form-group">
 					<label htmlFor="inputBoxDescriptionId">Description</label>
 					<input id="inputBoxDescriptionId" type="text" style={{ width:inpuBoxWidth}} className="form-control"  value={this.getDescription()} onChange={this.props.isLoading ? () => {} : this.handleDescriptionChange} onKeyDown={this.handleKeyDown} ref={(input) => { this.editDescription = input; }}  />
+				</div>
+				<div className="form-group">
+					<label htmlFor="inputBoxCategoryId">Category</label>
+
+					{/* <input id="inputBoxCategoryId" type="text" style={{ width:inpuBoxWidth}} className="form-control"  
+					value={this.getCategory()} onChange={this.props.isLoading ? () => {} : this.handleDescriptionChange} onKeyDown={this.handleKeyDown} ref={(input) => { this.editCategory = input; }}  /> */}
+
+					<select id="inputBoxCategoryId" className="form-control" onChange={this.props.isLoading ? () => {} : this.handleCategoryChange}  value={this.getCategory()}  onKeyDown={this.handleKeyDown} ref={(input) => { this.editCategory = input; }} >
+						<option value="Hardware">Hardware</option>
+						<option value="Software">Software</option>
+						<option value="Other">Other</option>
+					</select>			   
 				</div>
 			</form>;
 		}
@@ -204,6 +230,7 @@ class DBLinkComponent extends React.PureComponent {
 	}
 
 	getButtonsJsx() {
+
 		const buttonStyle = { paddingTop: '1px', paddingBottom: '0px', paddingLeft: '4px', paddingRight: '4px' };
 		let buttonsJsx = <span></span>;
 		if (this.props.isAdmin) {

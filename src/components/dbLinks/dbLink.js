@@ -7,7 +7,17 @@ import { FireStoreDocumentBaseClass}  from '../../common/FireStoreDocumentBaseCl
 
 const typeDefDBObjectName = 'DBLink';
 
-const TypeDef = {
+class CategoryPropertyTypeDef  {
+
+	constructor() {
+		this.__name = 'category';
+		this.__type = 'String';
+		this.__values = ['Hardware', 'Software', 'Other'];
+	}	
+	getDefault = function() { return this.__values[0]; }
+};
+
+export const TypeDef = {
 
 	__name: 		  typeDefDBObjectName,
 	__collectionName: typeDefDBObjectName+'s',
@@ -15,6 +25,7 @@ const TypeDef = {
 	id:				  'String',
 	link:			  'String',
 	description:	  'String',
+	category:	  	  new CategoryPropertyTypeDef(),
 	order:			  'Number',
 	files:			  'Object',
 	createdAt: 		  FIRESTORE_TIMESTAMP,
@@ -31,18 +42,21 @@ export class DBLink extends FireStoreDocumentBaseClass {
 		Tracer.log(`constructor`, this);
 	}
 	create(link, description, order) {
+		
 		const doc = {
 			id: ComponentUtil.getNewUniqueId(), // Do not prefix the id with the name of the collection, firebase does not like it
 			link,
 			description,
 			order,
-			files:{},
+			category: TypeDef.category.getDefault(),
+			files: {},
 			createdAt: firestoreManager.now(),
 			updatedAt: firestoreManager.now(),
 		};
 		return doc;
 	}	
 	shape() {
+
 		return PropTypes.shape({
 			id: PropTypes.string.isRequired,
 			link: PropTypes.string.isRequired,
@@ -123,4 +137,5 @@ export class DBLink extends FireStoreDocumentBaseClass {
 		});
 	}
 };
+
 export default new DBLink();

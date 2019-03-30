@@ -28,6 +28,53 @@ describe('TypeDefUtil', () => {
 			});
 		}
 	);
-	
-	
+
+	it(`verifyType with enum type`, () => {
+
+		const typeDefDBObjectName = 'DBLink';
+
+		// const categoryPropertyTypeDef = {
+		// 	__type: 'String',
+		// 	__values: ['hardware', 'software', 'other'],
+		// 	getDefault: () => this.__values[0],
+		// };
+
+		function categoryPropertyTypeDef () {
+
+			this.__type = 'String';
+			this.__values = ['hardware', 'software', 'other'];
+			this.getDefault = function() { return this.__values[0]; }
+		};
+		
+		const typeDef = {
+		
+			__name: 		  typeDefDBObjectName,
+			__collectionName: typeDefDBObjectName+'s',
+		
+			id:				  'String',
+			link:			  'String',
+			description:	  'String',
+			category:	  	  new categoryPropertyTypeDef(),
+			order:			  'Number',
+			files:			  'Object',
+			createdAt: 		  FIRESTORE_TIMESTAMP,
+		};
+		
+		const dbLink = {
+			__name: 		  typeDefDBObjectName,
+			__collectionName: typeDefDBObjectName+'s',
+		
+			id:				  'String',
+			link:			  'String',
+			description:	  'String',
+			category:	  	  'hardware',
+			order:			  1,
+			files:			  {},
+			createdAt: 		  { nanoseconds: 661000000, seconds: 1541389535 },
+		};
+
+		expect(TypeDefUtil.verifyType(typeDef, dbLink, false)).toBe(true);
+		expect("hardware").toBe(typeDef.category.getDefault());
+	});
+
 });

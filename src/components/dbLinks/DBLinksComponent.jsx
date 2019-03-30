@@ -6,6 +6,7 @@ import Checkbox from '../Checkbox';
 import firestoreManager from '../../common/FirestoreManager';
 import ComponentUtil from '../../common/ComponentUtil';
 import DBLink from './dbLink';
+import { TypeDef as DBLinkTypeDef } from './dbLink';
 import Tracer from "../../common/Tracer";
 import DBLinkComponent from './DBLinkComponent';
 import { max } from "moment";
@@ -23,6 +24,7 @@ class DBLinksComponent extends React.PureComponent {
 		isLoading: true,
 		DBLinks: [],
 		fileMetadatas: {}, // Map with key is dbLinkId containing a map where the key is the filename
+		category: 'All'// DBLinkTypeDef.category.getDefault(),
 	};
 
 	constructor(props) {
@@ -91,13 +93,18 @@ class DBLinksComponent extends React.PureComponent {
 					}
 				); 
 			}, 
-			'createdAt'
+			'createdAt', undefined, undefined, 
+			firestoreManager.whereClause('category', this.state.category, 'All')
 		);
 	}
 
 	test = () => {
 
-		this.loadAuthorizationRoles();
+		const marker = "*****************************************";
+		console.log(marker);
+		console.log(JSON.stringify(this.state, null, 2));
+		console.log(marker);
+		alert('See result in browser console');
 	}
 	
 	stopMonitorDBLinksCollection() {
@@ -148,6 +155,14 @@ class DBLinksComponent extends React.PureComponent {
 		alert('See result in browser console');
 	}
 
+	handleCategoryChange = (event) => {
+
+		ComponentUtil.forceRefresh(this, { category : event.target.value }, () => {
+
+			this.monitorDBLinksCollection();
+		});		
+	}
+
 	getAddButtonAlertJsx = (isLoading, render = true) => {
 
 		if(!render) return null;
@@ -161,7 +176,20 @@ class DBLinksComponent extends React.PureComponent {
 				&nbsp;
 				<Button isLoading={isLoading} text="Export" onClick={this.export} />
 				&nbsp;
+
+				<select id="inputBoxCategoryId" className="form-control" 
+					onChange={isLoading ? () => {} : this.handleCategoryChange}  
+					value={this.state.category}  
+					// ref={(input) => { this.editCategory = input; }} 
+					>
+					<option value="Hardware">Hardware</option>
+					<option value="Software">Software</option>
+					<option value="Other">Other</option>
+					<option value="All">All</option>
+				</select>
+
 				{/* <Button isLoading={isLoading} text="Test" onClick={this.test} /> &nbsp; */}
+
 				{/* https://developer.mozilla.org/en-US/docs/Web/API/FileList */}
 				<input id="fileItem" multiple type="file"></input>
 			</div>;

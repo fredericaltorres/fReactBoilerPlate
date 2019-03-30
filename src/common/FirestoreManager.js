@@ -4,7 +4,7 @@
 	Auth: https://firebase.google.com/docs/auth/web/manage-users?authuser=0
 	Pricing: https://firebase.google.com/pricing/?authuser=0
 	Database operation
-		Query
+		Query			
 			https://firebase.google.com/docs/firestore/query-data/get-data
 			https://firebase.google.com/docs/database/web/lists-of-data
 			https://firebase.google.com/docs/firestore/query-data/listen
@@ -384,23 +384,38 @@ class FirestoreManager {
 		}
 	} 
 
+	whereClause(property, value, ignoreValue, operator = '==') {
+
+		if(value === ignoreValue)
+			return null;
+		return { property, operator, value };
+	}
+
 	// https://firebase.google.com/docs/database/web/lists-of-data
 	// https://firebase.google.com/docs/firestore/query-data/listen
-	monitorQuery(collection, callBack, orderByColumn = null, orderDirection = 'desc', maxRecord = DEFAULT_MAX_RECORD
-			// , filterFunc = null
+	monitorQuery(
+			collection, 
+			callBack, 
+			orderByColumn = null, 
+			orderDirection = 'desc', 
+			maxRecord = DEFAULT_MAX_RECORD,
+			whereClause = null
 		) {
-		
 		Tracer.log(`monitorQuery ${collection}, orderByColumn:${orderByColumn}/${orderDirection}, maxRecord:${maxRecord}`, this);
 		this.stopMonitorQuery(collection);
 
+		let col = this.getCollection(collection);
+		if(whereClause) {
+			col = col.where(whereClause.property, whereClause.operator, whereClause.value)
+		}
 		let query = null;
 		if(orderByColumn) {
-			query = this.getCollection(collection)
+			query = col
 				.orderBy(orderByColumn, orderDirection)
 					.limit(maxRecord);
 		}
 		else {
-			query = this.getCollection(collection).limit(maxRecord);
+			query = col.limit(maxRecord);
 		}
 
 		// Return a function handler that can unsubscribe the snapshot 

@@ -29,25 +29,42 @@ class TypeDefUtil {
 		let r = true;
 		this.getTypeDefProperties(typeDef).forEach((property) => {
 
-			const expectedType = typeDef[property];
-			const actualValue = doc[property];
-			const actualType = TypeUtil.getType(actualValue);
+			let expectedType = typeDef[property];
+			let actualValue = doc[property];
 
-			if(expectedType === FIRESTORE_TIMESTAMP) {
+			// if expectedType is contains an advanced property type definition rather than a string
+			if(TypeUtil.isObject(expectedType)) {
 
-				if(!(TypeUtil.isNumber(actualValue.nanoseconds) && TypeUtil.isNumber(actualValue.seconds))) {
-					//nanoseconds: 661000000, seconds: 1541389535
-					const errMsg = `TypeUtil.verifyType error on property:${property}, expectedType:${expectedType}, actualType:${actualType}`;
+				const propertyTypeDef = expectedType;
+				expectedType = propertyTypeDef.__type;
+				let acceptableValues = propertyTypeDef.__values;
+				const actualType = TypeUtil.getType(actualValue);
+				if(!acceptableValues.includes(actualValue)) {
+					const errMsg = `TypeUtil.verifyType error on enum property:${property}, expectedType:${expectedType}, actualType:${actualType}, invalid value:${actualValue}`;
 					r = false;
 					if(throwEx) Tracer.throw(errMsg);
-				}				
+				}
 			}
 			else {
 
-				if(expectedType !== actualType) {
-					const errMsg = `TypeUtil.verifyType error on property:${property}, expectedType:${expectedType}, actualType:${actualType}`;
-					r = false;
-					if(throwEx) Tracer.throw(errMsg);
+				const actualType = TypeUtil.getType(actualValue);
+
+				if(expectedType === FIRESTORE_TIMESTAMP) {
+
+					if(!(TypeUtil.isNumber(actualValue.nanoseconds) && TypeUtil.isNumber(actualValue.seconds))) {
+						//nanoseconds: 661000000, seconds: 1541389535
+						const errMsg = `TypeUtil.verifyType error on property:${property}, expectedType:${expectedType}, actualType:${actualType}`;
+						r = false;
+						if(throwEx) Tracer.throw(errMsg);
+					}				
+				}
+				else {
+
+					if(expectedType !== actualType) {
+						const errMsg = `TypeUtil.verifyType error on property:${property}, expectedType:${expectedType}, actualType:${actualType}`;
+						r = false;
+						if(throwEx) Tracer.throw(errMsg);
+					}
 				}
 			}
 		});

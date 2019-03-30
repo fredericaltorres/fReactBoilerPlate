@@ -22,6 +22,16 @@ This code is based on  [simple-react-app](https://www.npmjs.com/package/simple-r
     https://stackoverflow.com/questions/36092644/how-can-i-automate-firebase-deploy
 
 
+- firebase login
+- firebase list
+    FredToDo │ fredtodo-f553b
+
+For the real time database
+- firebase database:get --project fredtodo-f553b /
+
+for the firestore, The CLI does not support firestore, see ths nodejs tools
+- https://github.com/dalenguyen/firestore-import-export
+
 # React Component
 
 - [react-collapsible](https://github.com/glennflanagan/react-collapsible)
