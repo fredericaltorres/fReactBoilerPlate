@@ -176,16 +176,14 @@ class DBLinksComponent extends React.PureComponent {
 				&nbsp;
 				<Button isLoading={isLoading} text="Export" onClick={this.export} />
 				&nbsp;
-
-				<select id="inputBoxCategoryId" className="form-control" 
-					onChange={isLoading ? () => {} : this.handleCategoryChange}  
-					value={this.state.category}  
-					// ref={(input) => { this.editCategory = input; }} 
+				<select id="CategoryComboBoxId" className="form-control" 
+					onChange={isLoading ? () => {} : this.handleCategoryChange} 
+					value={this.state.category}
 					>
-					<option value="Hardware">Hardware</option>
+					{/* <option value="Hardware">Hardware</option>
 					<option value="Software">Software</option>
-					<option value="Other">Other</option>
-					<option value="All">All</option>
+					<option value="Other">Other</option> */}
+					{ComponentUtil.generateOptionsForSelect(DBLinkTypeDef.category.getAllValues())}
 				</select>
 
 				{/* <Button isLoading={isLoading} text="Test" onClick={this.test} /> &nbsp; */}

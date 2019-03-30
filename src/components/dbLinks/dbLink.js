@@ -3,18 +3,17 @@ import firestoreManager from '../../common/FirestoreManager';
 import ComponentUtil from '../../common/ComponentUtil';
 import { FIRESTORE_TIMESTAMP } from '../../common/TypeUtil';
 import Tracer from '../../common/Tracer';
-import { FireStoreDocumentBaseClass}  from '../../common/FireStoreDocumentBaseClass';
+import { FireStoreDocumentBaseClass, FireStorePropertyTypeDefBaseClass }  from '../../common/FireStoreDocumentBaseClass';
 
 const typeDefDBObjectName = 'DBLink';
 
-class CategoryPropertyTypeDef  {
+class CategoryPropertyTypeDef extends FireStorePropertyTypeDefBaseClass {
 
 	constructor() {
-		this.__name = 'category';
+		super();
 		this.__type = 'String';
 		this.__values = ['Hardware', 'Software', 'Other'];
-	}	
-	getDefault = function() { return this.__values[0]; }
+	}
 };
 
 export const TypeDef = {

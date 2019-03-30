@@ -4,6 +4,25 @@ import TypeUtil from '../common/TypeUtil';
 import TypeDefUtil from '../common/TypeDefUtil';
 import Tracer from '../common/Tracer';
 
+export class FireStorePropertyTypeDefBaseClass {
+
+	constructor() {
+		this.__type = 'DefineType';
+		this.__values = [];
+	}
+
+	getIgnoreAllValue = function() { return 'All'; }
+
+	getDefault = function() { return this.__values[0]; }
+
+	getAllValues = function() {
+		const a =  [...this.__values];
+		if(this.getIgnoreAllValue()) { // Insert ignore element if defined
+			a.splice(0, 0, this.getIgnoreAllValue());
+		}
+		return a;
+	}
+}
 //////////////////////////////////////////////////////////
 /// FireStoreDocumentBaseClass
 /// Base class for Firestore document

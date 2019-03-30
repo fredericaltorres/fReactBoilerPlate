@@ -66,6 +66,13 @@ class ComponentUtil  {
 		
 		return Math.random().toString(16).substr(2, 16);
 	}
+
+	static generateOptionsForSelect(optionValueArray) {
+
+		return optionValueArray.map((optionValue) => {
+			return <option key={optionValue} value={optionValue}>{optionValue}</option>;
+		 });		
+	}
 }
 
 export default ComponentUtil;

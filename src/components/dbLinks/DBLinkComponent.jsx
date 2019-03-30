@@ -120,7 +120,6 @@ class DBLinkComponent extends React.PureComponent {
 				dbLink.link = this.getLink();
 				dbLink.description = this.getDescription();
 				dbLink.category = this.getCategory();
-				debugger;
 				DBLink.update(dbLink).then(() => {
 					self.onEditClick();
 				});
