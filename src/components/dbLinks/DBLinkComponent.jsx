@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Tracer from '../../common/Tracer';
+import BrowserUtil from '../../common/BrowserUtil';
 import firestoreManager from "../../common/FirestoreManager";
 import DBLink from './dbLink';
 import ComponentUtil from '../../common/ComponentUtil';
@@ -25,8 +26,9 @@ class DBLinkComponent extends React.PureComponent {
 	state = {
 
 		isEditing: false,
-		editText: null,
+		editLink: null,
 		editDescription: null,
+		editCategory: null,
 	};
 
 	LINK_MAX_LENGTH_FOR_DISPLAY = 55;
@@ -39,7 +41,7 @@ class DBLinkComponent extends React.PureComponent {
 
 	componentDidMount() {
 
-		ComponentUtil.forceRefresh(this, { isEditing: this.state.isEditing, editText: this.props.link } );
+		ComponentUtil.forceRefresh(this, { isEditing: this.state.isEditing, editLink: this.props.dbLink.link } );
 	}
 
 	uploadSelectedFiles = () => {
@@ -63,6 +65,11 @@ class DBLinkComponent extends React.PureComponent {
 			});
 		}
 		else Tracer.notifyUser(`No file to upload!`, this);
+	}
+
+	onDebugState = () => {
+
+		Tracer.logComponent(this, this);
 	}
 	
 	onDeleteClick = () => {
@@ -93,7 +100,7 @@ class DBLinkComponent extends React.PureComponent {
 
 	handleLinkChange = (event) => {
 
-		ComponentUtil.forceRefresh(this, { editText : event.target.value });
+		ComponentUtil.forceRefresh(this, { editLink : event.target.value });
 	}
 
 	handleDescriptionChange = (event) => {
@@ -109,7 +116,9 @@ class DBLinkComponent extends React.PureComponent {
 	handleKeyDown = (event) => {
 		
 		const self = this;
+
 		if (event.which === ESCAPE_KEY) {
+
 			this.onEditClick();
 		}
 		else if (event.which === ENTER_KEY) {
@@ -134,8 +143,8 @@ class DBLinkComponent extends React.PureComponent {
 
 	getLink() {
 
-		if(this.state.editText)
-			return this.state.editText;
+		if(this.state.editLink !== null)
+			return this.state.editLink;
 		return this.props.dbLink.link;			
 	}
 
@@ -150,14 +159,14 @@ class DBLinkComponent extends React.PureComponent {
 
 	getDescription() {
 
-		if(this.state.editDescription)
+		if(this.state.editDescription !== null)
 			return this.state.editDescription;
 		return this.props.dbLink.description;
 	}
 
 	getCategory() {
 
-		if(this.state.editCategory)
+		if(this.state.editCategory !== null)
 			return this.state.editCategory;
 		return this.props.dbLink.category;
 	}
@@ -170,9 +179,11 @@ class DBLinkComponent extends React.PureComponent {
 		Tracer.log(`render this.props.fileMetadatas length:${fileMetadatas.length}`, this);
 
 		// Generate jsx for non edit mode
-		let inputBoxesJsx  = <button type="button" className="btn btn-link" onClick={this.onOpenClick}>
-			<b>{this.props.dbLink.category} - {this.props.dbLink.description}</b>
-		</button>;
+		let inputBoxesJsx  =  <span>
+			&nbsp;<i>{this.props.dbLink.category}</i><button type="button" className="btn btn-link" onClick={this.onOpenClick}>
+			<b>{this.props.dbLink.description}</b>
+			</button>
+		</span>;
 
 		let descriptionRendering = null;
 
@@ -183,11 +194,11 @@ class DBLinkComponent extends React.PureComponent {
 			inputBoxesJsx =<form>
 				<div className="form-group">
 					<label htmlFor="inputBoxLinkId">Link (id:{this.props.dbLink.id}) </label>
-					<input id="inputBoxLinkId" type="text" style={{ width:inpuBoxWidth}} className="form-control" value={this.getLink()} onChange={this.props.isLoading ? () => {} : this.handleLinkChange}  onKeyDown={this.handleKeyDown} ref={(input) => { this.editField = input; }} />
+					<input id="inputBoxLinkId" type="text" style={{width:inpuBoxWidth}} className="form-control" value={this.getLink()} onChange={this.props.isLoading ? () => {} : this.handleLinkChange}  onKeyDown={this.handleKeyDown} ref={(input) => { this.editField = input; }} />
 				</div>
 				<div className="form-group">
 					<label htmlFor="inputBoxDescriptionId">Description</label>
-					<input id="inputBoxDescriptionId" type="text" style={{ width:inpuBoxWidth}} className="form-control"  value={this.getDescription()} onChange={this.props.isLoading ? () => {} : this.handleDescriptionChange} onKeyDown={this.handleKeyDown} ref={(input) => { this.editDescription = input; }}  />
+					<input id="inputBoxDescriptionId" type="text" style={{width:inpuBoxWidth}} className="form-control"  value={this.getDescription()} onChange={this.props.isLoading ? () => {} : this.handleDescriptionChange} onKeyDown={this.handleKeyDown} ref={(input) => { this.editDescription = input; }}  />
 				</div>
 				<div className="form-group">
 					<label htmlFor="inputBoxCategoryId">Category</label>
@@ -239,8 +250,18 @@ class DBLinkComponent extends React.PureComponent {
 				<button type="button" style={buttonStyle} className="btn btn-info btn-sm" onClick={this.uploadSelectedFiles}>Upload</button>
 				&nbsp;
 				<button type="button" style={buttonStyle} className="btn btn-info btn-sm" onClick={this.onDeleteClick}>Delete</button>
+				&nbsp;
 				<input type="hidden" value={this.props.dbLink.id}></input>
+				{
+					BrowserUtil.isEqualQueryStringParameter("debug", "true") ?
+						<button type="button" style={buttonStyle} className="btn btn-danger btn-sm" onClick={this.onDebugState}>Dbg:State</button>
+						:
+						null
+				}
 			</span>;
+		}
+
+		if(BrowserUtil.isEqualQueryStringParameter("debug", "true")) {
 		}
 		return buttonsJsx;
 	}

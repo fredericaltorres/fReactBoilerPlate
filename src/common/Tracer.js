@@ -22,6 +22,17 @@ class Tracer {
 		else
 			return `[${this.getTimeStamp()}]`;
 	}
+	logObject(obj, instance = null)  {
+		
+		this.log(JSON.stringify(obj, null, 2), instance);
+	}
+	logComponent(reactComponent, instance = null)  {
+
+		const state = `state:${JSON.stringify(reactComponent.state, null, 4)}`;
+		this.log(state, reactComponent);
+		const props = `props:${JSON.stringify(reactComponent.props, null, 4)}`;
+		this.log(props, reactComponent);
+	}
 	log(m, instance = null) {
 		const mm = this.getPrefix(instance);
 		this.internalTrace(`%c ${mm}%c ${m}`, 'color:green;', 'color:blue;', console.log);

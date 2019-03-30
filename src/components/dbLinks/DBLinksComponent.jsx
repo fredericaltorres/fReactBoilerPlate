@@ -20,7 +20,6 @@ class DBLinksComponent extends React.PureComponent {
 	state = {
 
 		timeStamp: new Date().getTime(),
-		editText :'',
 		isLoading: true,
 		DBLinks: [],
 		fileMetadatas: {}, // Map with key is dbLinkId containing a map where the key is the filename
@@ -148,10 +147,7 @@ class DBLinksComponent extends React.PureComponent {
 
 	export = () => {
 
-		const marker = "*****************************************";
-		console.log(marker);
-		console.log(JSON.stringify(this.state.DBLinks, null, 2));
-		console.log(marker);
+		Tracer.logObject(this.state.DBLinks, this);
 		alert('See result in browser console');
 	}
 

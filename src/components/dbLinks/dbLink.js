@@ -5,8 +5,10 @@ import { FIRESTORE_TIMESTAMP } from '../../common/TypeUtil';
 import Tracer from '../../common/Tracer';
 import { FireStoreDocumentBaseClass, FireStorePropertyTypeDefBaseClass }  from '../../common/FireStoreDocumentBaseClass';
 
+// Name of the db entity
 const typeDefDBObjectName = 'DBLink';
 
+// Define a the property category as a enum type string
 class CategoryPropertyTypeDef extends FireStorePropertyTypeDefBaseClass {
 
 	constructor() {
@@ -16,19 +18,20 @@ class CategoryPropertyTypeDef extends FireStorePropertyTypeDefBaseClass {
 	}
 };
 
+// Define the DBLink type definition
 export const TypeDef = {
 
-	__name: 		  typeDefDBObjectName,
-	__collectionName: typeDefDBObjectName+'s',
+	__name: 		  typeDefDBObjectName, // The name of the type definition entity
+	__collectionName: typeDefDBObjectName + 's', // The Firebase collection name to use to store the instances
 
-	id:				  'String',
-	link:			  'String',
-	description:	  'String',
-	category:	  	  new CategoryPropertyTypeDef(),
-	order:			  'Number',
-	files:			  'Object',
-	createdAt: 		  FIRESTORE_TIMESTAMP,
-	updatedAt: 		  FIRESTORE_TIMESTAMP,
+	id:	'String',
+	link: 'String',
+	description: 'String',
+	category: new CategoryPropertyTypeDef(),
+	order: 'Number',
+	files: 'Object',
+	createdAt: FIRESTORE_TIMESTAMP,
+	updatedAt: FIRESTORE_TIMESTAMP,
 };
 
 // This class allow to add, update, delete document of the type definition DBLink.
@@ -53,18 +56,23 @@ export class DBLink extends FireStoreDocumentBaseClass {
 			updatedAt: firestoreManager.now(),
 		};
 		return doc;
-	}	
+	}
+	// return the react propType definition of a DBLink instance
 	shape() {
 
 		return PropTypes.shape({
 			id: PropTypes.string.isRequired,
 			link: PropTypes.string.isRequired,
 			description: PropTypes.string.isRequired,
+			category: PropTypes.string.isRequired,
 			files: PropTypes.object.isRequired,
 			createdAt: PropTypes.object.isRequired, // FIRESTORE_TIMESTAMP
 			updatedAt: PropTypes.object.isRequired, // FIRESTORE_TIMESTAMP
 		});
 	}
+	// Return the new order number to use for the next dbLink creation
+	// Note the property order is not used yet. dbLink instance are loaded based on the createAt
+	// property
 	getMaxOrder = (dbLinks) => {
 
 		let maxOrder = 0;
@@ -75,6 +83,7 @@ export class DBLink extends FireStoreDocumentBaseClass {
 		const r = maxOrder + 1;
 		return r;
 	}	
+	// delete one file associated with the dbLink
 	deleteFile = (dbLink, fileName, updateDbLinkInstance = true) => {
 
 		return new Promise((resolve, reject) => {
@@ -92,6 +101,7 @@ export class DBLink extends FireStoreDocumentBaseClass {
 				.catch((err) => { reject(err); });
 		});
 	}
+	// Delete all the file associated with the dbLink instance and then delete the dbLink instance
 	deleteWithFiles = (dbLink) => {
 
 		Tracer.log(`deleteWithFiles ${dbLink.id}`, this);
@@ -112,17 +122,21 @@ export class DBLink extends FireStoreDocumentBaseClass {
 				.catch(() => { reject(); });
 		});
 	}
+	// Load all the file metadatas associated with the dbLink instance
 	loadFilesMetaData = (dbLink) => {
 
 		return new Promise((resolve, reject) => {
 
 			const promises = [];
 			const files = Object.keys(dbLink.files);
+
 			files.forEach((fileName) => {
+
 				promises.push(firestoreManager.GetFileMetaDataFromStorage(fileName, dbLink.id));
 			});
 			Promise.all(promises)
 				.then((fileMetadatas) => {
+
 					const fileMap = {};
 					fileMetadatas.forEach((fileMetadata) => {
 						if(fileMap[dbLink.id] === undefined) fileMap[dbLink.id] = {};
@@ -131,6 +145,7 @@ export class DBLink extends FireStoreDocumentBaseClass {
 					resolve(fileMap);
 				})
 				.catch((err) => {
+
 					reject(err);
 				});
 		});
