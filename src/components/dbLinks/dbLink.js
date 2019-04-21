@@ -132,7 +132,7 @@ export class DBLink extends FireStoreDocumentBaseClass {
 
 			files.forEach((fileName) => {
 
-				promises.push(firestoreManager.GetFileMetaDataFromStorage(fileName, dbLink.id));
+				promises.push(firestoreManager.getFileMetaDataFromStorage(fileName, dbLink.id));
 			});
 			Promise.all(promises)
 				.then((fileMetadatas) => {

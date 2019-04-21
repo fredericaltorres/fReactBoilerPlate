@@ -44,10 +44,10 @@ class FirestoreManager {
 	// unsubscribe and stop monitoring data
 	static _monitoredSnapshot = { };
 	
-	constructor() {
+	constructor(nativeScriptRunTime = false) {
 
 		this.ADMIN_ROLE = "administrator";
-
+		this._nativeScriptRunTime = nativeScriptRunTime;
 		this._settings = getSettings();
 		this.batchModeOn = false;
 		this._currentUserAuthAuth = null;
@@ -58,9 +58,18 @@ class FirestoreManager {
 			
 			this.name = 'FirestoreManager';
 			Tracer.log(`FirestoreManager init`, this);
-			firebase.initializeApp(FirestoreManagerConfig);
+
+			if(this._nativeScriptRunTime) {
+				firebase.init({ persist: false }).then(
+					instance => { Tracer.log("firebase.init done ", this); },
+					error => { Tracer.log(`firebase.init -> error: ${error}`, this); }
+				);
+			}
+			else {
+				firebase.initializeApp(FirestoreManagerConfig);
+				this.__setUpOnAuthStateChanged();
+			}
 			FirestoreManager._initialized = true;
-			this.__setUpOnAuthStateChanged();
 		}
 	}
 
@@ -215,7 +224,9 @@ class FirestoreManager {
 		if(this._firestoreDb) 
 			return this._firestoreDb;
 
-		const firestore = firebase.firestore();
+		// With NativeScript firestore is not a function but an object
+		const firestore = this._nativeScriptRunTime ? firebase.firestore : firebase.firestore();
+
 		firestore.settings(this._settings);
 		this._firestoreDb = firestore;
 		return this._firestoreDb;
@@ -253,10 +264,10 @@ class FirestoreManager {
 	}
 
 	// https://firebase.google.com/docs/storage/web/file-metadata
-	GetFileMetaDataFromStorage(fileNameOnly, parentFolder = null) {
+	getFileMetaDataFromStorage(fileNameOnly, parentFolder = null) {
 
 		const fileName = this.getStorageFullPath(parentFolder, fileNameOnly);
-		Tracer.log(`GetFileMetaDataFromStorage file:${fileName}`, this);
+		Tracer.log(`getFileMetaDataFromStorage file:${fileName}`, this);
 
 		return new Promise((resolve, reject) => {
 
@@ -264,14 +275,14 @@ class FirestoreManager {
 			fileRef.getMetadata()
 				.then((metadata) => {
 
-					// Tracer.log(`GetFileMetaDataFromStorage file:${fileName} ok`, this);
+					// Tracer.log(`getFileMetaDataFromStorage file:${fileName} ok`, this);
 					fileRef.getDownloadURL().then((downloadURL) => {
 						metadata.downloadURL = downloadURL;
 						resolve(metadata);
 					});
 				}).catch((err) => {
 
-					Tracer.log(`GetFileMetaDataFromStorage file:${fileName} failed ${err}`, this);
+					Tracer.log(`getFileMetaDataFromStorage file:${fileName} failed ${err}`, this);
 					reject(err);
 				});
 		});
@@ -356,7 +367,9 @@ class FirestoreManager {
 		const data = doc.data();
 		if(!data)
 			return null; // The document does not exist
-		data[idFieldName] = doc._key.toString();
+ 		// With NatveScript the id field is already in the object and the property _key does not exist
+		if(!this._nativeScriptRunTime)
+			data[idFieldName] = doc._key.toString();
 		return data;
 	}
 
