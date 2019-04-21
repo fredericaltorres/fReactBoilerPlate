@@ -24,7 +24,6 @@ import ComponentUtil from './ComponentUtil';
 import TypeUtil from './TypeUtil';
 import TypeDefUtil from './TypeDefUtil';
 
-
 const DEFAULT_MAX_RECORD = 400;
 const DEFAULT_ID_FIELD_NAME = "id";
 const UPDATE_AT_PROPERTY_NAME = "updatedAt";
@@ -38,7 +37,7 @@ const getSettings = () => {
 // Therefore static members could be just members
 class FirestoreManager {
 
-	static _initialized = false;
+	// static _initialized = false; // NativeScript does not support static, see definition at the end of the file
 	
 	// Static object to store snapshot unsusbcribe method, to be able to 
 	// unsubscribe and stop monitoring data
@@ -60,13 +59,15 @@ class FirestoreManager {
 			Tracer.log(`FirestoreManager init`, this);
 
 			if(this._nativeScriptRunTime) {
+				// init() return a Promise
 				firebase.init({ persist: false }).then(
 					instance => { Tracer.log("firebase.init done ", this); },
 					error => { Tracer.log(`firebase.init -> error: ${error}`, this); }
 				);
 			}
 			else {
-				firebase.initializeApp(FirestoreManagerConfig);
+				// initializeApp does not return a promise
+				firebase.initializeApp(FirestoreManagerConfig); 
 				this.__setUpOnAuthStateChanged();
 			}
 			FirestoreManager._initialized = true;
@@ -667,5 +668,7 @@ class FirestoreManager {
 		return d === 'desc' ? "[D]" : "[A]";
 	}
 }  
+
+FirestoreManager._initialized = false;
 
 export default new FirestoreManager();
