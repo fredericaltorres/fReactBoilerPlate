@@ -36,6 +36,24 @@ class testPlanDialog extends React.PureComponent {
 				ComponentUtil.forceRefresh(this, { testPlan })
 			});
 	}	
+	renderEditControlsJsx(typeDef, entity) {
+
+		const l = [];
+		this.getTypeDefProperties(typeDef).forEach((property, index) => {
+			
+			let v = entity[property];
+			const expectedType = typeDef[property];
+			if(expectedType === FIRESTORE_TIMESTAMP) {
+				v = this.formatFirebaseTimestamp(v);
+			}
+			l.push(
+				<div key={`key_${property}`}>
+					{property} : {v} <br/>
+				</div>
+			);
+		});
+		return l;
+	}	
 	render() {
 		const testPlan = this.state.testPlan;
 		if(testPlan === null)
@@ -48,7 +66,7 @@ class testPlanDialog extends React.PureComponent {
 				<h2>Test Plan</h2>
 				Name: {testPlan.name}
 				{
-					TypeDefUtil.renderEditControlsJsx(TestPlan._typeDef, testPlan)
+					this.renderEditControlsJsx(TestPlan._typeDef, testPlan)
 				}
 			</div>
 		);
