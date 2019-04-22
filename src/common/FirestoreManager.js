@@ -56,9 +56,16 @@ class FirestoreManager {
 
 		if(this._nativeScriptRunTime) {
 			// init() return a Promise
-			firebase.init({ persist: false }).then(
-				instance => { Tracer.log("firebase.init done ", this); },
-				error => { Tracer.log(`firebase.init -> error: ${error}`, this); }
+			firebase.init({ 
+				persist: false
+			}).then(
+				instance => {
+					Tracer.log("firebase.init done ", this);
+					this.__setUpOnAuthStateChanged();
+				},
+				error => {
+					Tracer.log(`firebase.init -> error: ${error}`, this);
+				}
 			);
 		}
 		else {
