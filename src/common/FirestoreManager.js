@@ -21,13 +21,16 @@
 */
 import Tracer from './Tracer';
 import moment from "moment"; // http://momentjs.com/
-import FirestoreManagerConfig from './FirestoreManagerConfig';
 import ComponentUtil from './ComponentUtil';
 import TypeUtil from './TypeUtil';
 import TypeDefUtil from './TypeDefUtil';
 
+ // In NativeScript mode all the connection properties are passed in the file GoogleService-Info.plist
+ // In NativeScript the file returns an empty object
+import FirestoreManagerConfig from './FirestoreManagerConfig';
+
 const DEFAULT_MAX_RECORD = 400;
-const DEFAULT_ID_FIELD_NAME = "id";
+const DEFAULT_ID_FIELD_NAME = "id"; // NativeScript firebase library assume that the id field is named 'id'
 const UPDATE_AT_PROPERTY_NAME = "updatedAt";
 
 const getSettings = () => {
@@ -38,13 +41,13 @@ const getSettings = () => {
 // This class is exported as a singleton. See export at the end of the file
 class FirestoreManager {
 	
-	// Static object to store snapshot unsusbcribe method, to be able to 
-	// unsubscribe and stop monitoring data
-	static _monitoredSnapshot = { };
+	
+	
 	
 	constructor(nativeScriptRunTime = false) {
 
 		this.ADMIN_ROLE = "administrator";
+		this._monitoredSnapshot = { }; // Store snapshot unsusbcribe method, to be able to  unsubscribe and stop monitoring data
 		this.batchModeOn = false;
 		this.onCurrentUserLoadedCallBack = null;
 		this.name = "FirestoreManager";
@@ -451,11 +454,11 @@ class FirestoreManager {
 
 	stopMonitorQuery(collection) {
 		
-		if(FirestoreManager._monitoredSnapshot[collection]) {
+		if(this._monitoredSnapshot[collection]) {
 
 			Tracer.log(`Unsubscribe monitored snapshot:${collection}`, this);
-			this.__unsubscribeMonitoredSnapshot(FirestoreManager._monitoredSnapshot[collection]);
-			delete FirestoreManager._monitoredSnapshot[collection];
+			this.__unsubscribeMonitoredSnapshot(this._monitoredSnapshot[collection]);
+			delete this._monitoredSnapshot[collection];
 		}
 	} 
 
@@ -495,7 +498,7 @@ class FirestoreManager {
 		}
 
 		// Return a function handler that can unsubscribe the snapshot 
-		FirestoreManager._monitoredSnapshot[collection] = query.onSnapshot((querySnapshot) => {
+		this._monitoredSnapshot[collection] = query.onSnapshot((querySnapshot) => {
 
 			let records = this.__rebuildDocuments(querySnapshot)
 			try {
