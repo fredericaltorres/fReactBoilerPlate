@@ -47,7 +47,6 @@ class FirestoreManager {
 		this.batchModeOn = false;
 		this.onCurrentUserLoadedCallBack = null;
 		this.name = "FirestoreManager";
-		this.name = 'FirestoreManager';
 		this._nativeScriptRunTime = nativeScriptRunTime;
 		this._settings = getSettings();		
 		this._currentUserAuthAuth = null;
@@ -86,7 +85,7 @@ class FirestoreManager {
 			if (user == null) {
 				this._currentUserAuthAuth = null;
 				if(this.onCurrentUserLoadedCallBack)
-					this.onCurrentUserLoadedCallBack(null);					
+					this.onCurrentUserLoadedCallBack(null);
 			}
 			else {
 				// let name = user.displayName;
@@ -106,7 +105,7 @@ class FirestoreManager {
 					this.onCurrentUserLoadedCallBack(this.getCurrentUser());
 			}
 		} else {
-			console.log('No user change or log out');
+			Tracer.log('No user change or log out', this);
 			this._currentUserAuthAuth = null;
 			if(this.onCurrentUserLoadedCallBack)
 				this.onCurrentUserLoadedCallBack(null);
@@ -223,8 +222,8 @@ class FirestoreManager {
 		}
 		else {
 			return firebaseWebApi.auth().signOut()
-				.then(() => console.log("Logout OK"))
-				.catch(error => console.log("Logout error: " + JSON.stringify(error)));
+				.then(() => Tracer.log("Logout OK", this))
+				.catch(error => Tracer.error("Logout error: " + JSON.stringify(error), this));
 		}
 	}
 
@@ -381,8 +380,7 @@ class FirestoreManager {
 
 	commitBatch(batch) {
 
-		Tracer.log(`commitBatch`, this);
-		console.log('batch', batch);
+		Tracer.log(`commitBatch ${batch}`, this);
 		this.batchModeOn = false;
 		return batch.commit();
 	}
