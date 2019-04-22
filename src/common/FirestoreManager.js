@@ -1,10 +1,12 @@
 /*
-	Firebase / Cloud Firestore helper class
+	FirestoreManager:
+	- Firebase Firestore helper class
+	- Work in browser and for NativeScript on iOS.
 
 	Auth: https://firebase.google.com/docs/auth/web/manage-users?authuser=0
 	Pricing: https://firebase.google.com/pricing/?authuser=0
 	Database operation
-		Query			
+		Query
 			https://firebase.google.com/docs/firestore/query-data/get-data
 			https://firebase.google.com/docs/database/web/lists-of-data
 			https://firebase.google.com/docs/firestore/query-data/listen
@@ -15,7 +17,7 @@
 			https://firebase.google.com/docs/firestore/manage-data/add-data
 			https://firebase.google.com/docs/firestore/manage-data/transactions#batched-writes
 
-	Torres Frederic 2018			
+	Torres Frederic 2018, 2019.
 */
 import Tracer from './Tracer';
 import moment from "moment"; // http://momentjs.com/
@@ -33,8 +35,7 @@ const getSettings = () => {
 	return { timestampsInSnapshots: true };
 }
 
-// This class is exported as a singleton.
-// Therefore static members could be just members
+// This class is exported as a singleton. See export at the end of the file
 class FirestoreManager {
 	
 	// Static object to store snapshot unsusbcribe method, to be able to 
@@ -54,7 +55,6 @@ class FirestoreManager {
 		Tracer.log(`FirestoreManager init`, this);
 
 		if(this._nativeScriptRunTime) {
-			// init() return a Promise
 			firebase.init({ 
 				persist: false
 			}).then(
@@ -88,23 +88,20 @@ class FirestoreManager {
 					this.onCurrentUserLoadedCallBack(null);
 			}
 			else {
-				// let name = user.displayName;
-				// let email = user.email;
-				// let photoUrl = user.photoURL;
-				// let emailVerified = user.emailVerified;
-				// let uid = user.uid;  // The user's ID, unique to the Firebase project. Do NOT use
-				// 				 // this value to authenticate with your backend server, if
-				// 				 // you have one. Use User.getToken() instead.
-
-				Tracer.log(`FirestoreManager currentUser:${this.getCurrentUserEmail()}, udi:${this.getCurrentUserUID()}`, this);
+				// The user's ID, unique to the Firebase project. Do NOT use
+				// this value to authenticate with your backend server, if
+				// you have one. Use User.getToken() instead.
 
 				// https://firebase.google.com/docs/reference/js/firebase.User#getIdToken
 				// this.getCurrentUser().getIdToken().then(data => alert(data));
 
+				Tracer.log(`FirestoreManager currentUser:${this.getCurrentUserEmail()}, uid:${this.getCurrentUserUID()}`, this);
 				if(this.onCurrentUserLoadedCallBack)
 					this.onCurrentUserLoadedCallBack(this.getCurrentUser());
 			}
-		} else {
+		}
+		else {
+
 			Tracer.log('No user change or log out', this);
 			this._currentUserAuthAuth = null;
 			if(this.onCurrentUserLoadedCallBack)
@@ -112,9 +109,9 @@ class FirestoreManager {
 		}
 	}
 
-	// If the current user auth auth record is not loaded then load it first, the return the
-	// answer in a promise
-	currentUserHasRole(role) {
+	// If the current user authorization record is not loaded then we load it
+	// Always returns the result as a promise
+	currentUserHasRoleAsync(role) {
 
 		return new Promise((resolve, reject) => {
 
@@ -123,7 +120,7 @@ class FirestoreManager {
 				this.__loadUserAuthAuth( this.getCurrentUserUID() ).then( (currentUserAuthAuth) => {
 
 					if(currentUserAuthAuth === null) { // current record in _users collection was not found
-						
+
 						resolve(false);
 					}
 					else {
@@ -134,14 +131,15 @@ class FirestoreManager {
 				});
 			}
 			else {
+
 				resolve(this.__currentUserHasRole(role));
 			}
 		});
 	}
 
-	__currentUserHasRole(role) { // TODO: UPDATE ALL FUNCTION
+	__currentUserHasRole(role) {
 
-		if(!this._currentUserAuthAuth) { // TODO: UPDATE
+		if(!this._currentUserAuthAuth) {
 			Tracer.warn(`__currentUserHasRole() was called, but the variable _currentUserAuthAuth was not loaded with roles`);
 			return false;
 		}
@@ -154,15 +152,18 @@ class FirestoreManager {
 	// if the user is not loaded, there is no call to load the user auth auth data
 	getCurrentUserLoadedIsAdmin() {
 
-		return this.__currentUserHasRole(this.ADMIN_ROLE);		
+		return this.__currentUserHasRole(this.ADMIN_ROLE);
 	}
 
-	// https://grokonez.com/android/firebase-authentication-sign-up-sign-in-sign-out-verify-email-android
 	getCurrentUser() {
-		if(this._nativeScriptRunTime)
+
+		if(this._nativeScriptRunTime) {
+			// The NativeScript getCurrentUser() return a promise
+			// In NativeScript mode _nativeScriptUser is loaded by function usernamePasswordLogin()
+			if(this._nativeScriptUser === null)
+				Tracer.throw("getCurrentUser() cannot be called if _nativeScriptUser has not be loaded");
 			return this._nativeScriptUser;
-			// The NativeScript getCurrentUser return a promise
-			// return firebase.getCurrentUser() => Promise
+		}
 		else 
 			return firebase.auth().currentUser;
 	}
@@ -237,12 +238,13 @@ class FirestoreManager {
 		if(this._nativeScriptRunTime) {
 			return firebase.login(
 				{
-				type: firebase.LoginType.PASSWORD,
-				passwordOptions: {
-					email: email,
-					password: password,
+					type: firebase.LoginType.PASSWORD,
+					passwordOptions: {
+						email: email,
+						password: password,
+					}
 				}
-			})
+			)
 			.then(user => {
 				const s = JSON.stringify(user);
 				Tracer.log(`usernamePasswordLogin user:${s}`, $this);
@@ -252,7 +254,7 @@ class FirestoreManager {
 			.catch(error => console.log(error));
 		}
 		else {
-			throw "usernamePasswordLogin() not implemented for browser mode";
+			Tracer.throw("usernamePasswordLogin() not implemented for browser mode");
 		}
 	}
 
@@ -267,7 +269,8 @@ class FirestoreManager {
 				.then((result) => {
 
 					const user = result.user;
-					alert(`Hello ${user.displayName}`);
+					if(this._nativeScriptRunTime)
+						alert(`Hello ${user.displayName}`);
 					resolve();
 				})
 				.catch((error) => {
@@ -392,6 +395,7 @@ class FirestoreManager {
 	}
 
 	getStorageFullPath(parentFolder, fileName) {
+
 		return (parentFolder == null) ? "" : parentFolder.toString() + "/" + fileName;
 	}
 
@@ -472,6 +476,7 @@ class FirestoreManager {
 			maxRecord = DEFAULT_MAX_RECORD,
 			whereClause = null
 		) {
+
 		Tracer.log(`monitorQuery ${collection}, orderByColumn:${orderByColumn}/${orderDirection}, maxRecord:${maxRecord}`, this);
 		this.stopMonitorQuery(collection);
 
@@ -494,9 +499,6 @@ class FirestoreManager {
 
 			let records = this.__rebuildDocuments(querySnapshot)
 			try {
-				// if(filterFunc) {
-				// 	records = records.filter(filterFunc);
-				// }
 				if(callBack) callBack(records);
 			}
 			catch(ex) {
@@ -525,6 +527,8 @@ class FirestoreManager {
 							resolve(null); // return null to notify caller that document was not found and it was expected
 					}
 
+					// In firestore sub collection in an object are not loaded by default
+					// We can specify a list of property in the object that point to sub collection
 					if(TypeUtil.isArray(subCollections)) {  // Load sub collections
 
 						const promises = [];

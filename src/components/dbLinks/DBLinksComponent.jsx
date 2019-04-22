@@ -115,7 +115,7 @@ class DBLinksComponent extends React.PureComponent {
 
 		if(firestoreManager.isCurrentUserLoaded()) {
 
-			return firestoreManager.currentUserHasRole(firestoreManager.ADMIN_ROLE).then((isAdmin) => {
+			return firestoreManager.currentUserHasRoleAsync(firestoreManager.ADMIN_ROLE).then((isAdmin) => {
 
 				
 				if(isAdmin) {
