@@ -36,8 +36,6 @@ const getSettings = () => {
 // This class is exported as a singleton.
 // Therefore static members could be just members
 class FirestoreManager {
-
-	// static _initialized = false; // NativeScript does not support static, see definition at the end of the file
 	
 	// Static object to store snapshot unsusbcribe method, to be able to 
 	// unsubscribe and stop monitoring data
@@ -46,68 +44,66 @@ class FirestoreManager {
 	constructor(nativeScriptRunTime = false) {
 
 		this.ADMIN_ROLE = "administrator";
-		this._nativeScriptRunTime = nativeScriptRunTime;
-		this._settings = getSettings();
 		this.batchModeOn = false;
-		this._currentUserAuthAuth = null;
 		this.onCurrentUserLoadedCallBack = null;
 		this.name = "FirestoreManager";
+		this.name = 'FirestoreManager';
+		this._nativeScriptRunTime = nativeScriptRunTime;
+		this._settings = getSettings();		
+		this._currentUserAuthAuth = null;
+		this._nativeScriptUser = null;
+		Tracer.log(`FirestoreManager init`, this);
 
-		if(!FirestoreManager._initialized) {
-			
-			this.name = 'FirestoreManager';
-			Tracer.log(`FirestoreManager init`, this);
-
-			if(this._nativeScriptRunTime) {
-				// init() return a Promise
-				firebase.init({ persist: false }).then(
-					instance => { Tracer.log("firebase.init done ", this); },
-					error => { Tracer.log(`firebase.init -> error: ${error}`, this); }
-				);
-			}
-			else {
-				// initializeApp does not return a promise
-				firebase.initializeApp(FirestoreManagerConfig); 
-				this.__setUpOnAuthStateChanged();
-			}
-			FirestoreManager._initialized = true;
+		if(this._nativeScriptRunTime) {
+			// init() return a Promise
+			firebase.init({ persist: false }).then(
+				instance => { Tracer.log("firebase.init done ", this); },
+				error => { Tracer.log(`firebase.init -> error: ${error}`, this); }
+			);
+		}
+		else {
+			// initializeApp does not return a promise
+			firebase.initializeApp(FirestoreManagerConfig); 
+			this.__setUpOnAuthStateChanged();
 		}
 	}
 
 	__setUpOnAuthStateChanged () {
 
-		firebase.auth().onAuthStateChanged((user) => {
+		firebase.auth().onAuthStateChanged(this.__onNewUserAuthenticated);
+	}
 
-			if (user) {
-				if (user == null) {
-					this._currentUserAuthAuth = null;
-					if(this.onCurrentUserLoadedCallBack)
-						this.onCurrentUserLoadedCallBack(null);					
-				}
-				else {
-					// let name = user.displayName;
-					// let email = user.email;
-					// let photoUrl = user.photoURL;
-					// let emailVerified = user.emailVerified;
-					// let uid = user.uid;  // The user's ID, unique to the Firebase project. Do NOT use
-					// 				 // this value to authenticate with your backend server, if
-					// 				 // you have one. Use User.getToken() instead.
+	__onNewUserAuthenticated (user) {
 
-					Tracer.log(`FirestoreManager currentUser:${this.getCurrentUser().displayName}, udi:${this.getCurrentUserUID()}`, this);
-
-					// https://firebase.google.com/docs/reference/js/firebase.User#getIdToken
-					// this.getCurrentUser().getIdToken().then(data => alert(data));
-
-					if(this.onCurrentUserLoadedCallBack)
-						this.onCurrentUserLoadedCallBack(this.getCurrentUser());
-				}
-			} else {
-				console.log('No user change or log out');
+		if (user) {
+			if (user == null) {
 				this._currentUserAuthAuth = null;
 				if(this.onCurrentUserLoadedCallBack)
-					this.onCurrentUserLoadedCallBack(null);
+					this.onCurrentUserLoadedCallBack(null);					
 			}
-		});
+			else {
+				// let name = user.displayName;
+				// let email = user.email;
+				// let photoUrl = user.photoURL;
+				// let emailVerified = user.emailVerified;
+				// let uid = user.uid;  // The user's ID, unique to the Firebase project. Do NOT use
+				// 				 // this value to authenticate with your backend server, if
+				// 				 // you have one. Use User.getToken() instead.
+
+				Tracer.log(`FirestoreManager currentUser:${this.getCurrentUserEmail()}, udi:${this.getCurrentUserUID()}`, this);
+
+				// https://firebase.google.com/docs/reference/js/firebase.User#getIdToken
+				// this.getCurrentUser().getIdToken().then(data => alert(data));
+
+				if(this.onCurrentUserLoadedCallBack)
+					this.onCurrentUserLoadedCallBack(this.getCurrentUser());
+			}
+		} else {
+			console.log('No user change or log out');
+			this._currentUserAuthAuth = null;
+			if(this.onCurrentUserLoadedCallBack)
+				this.onCurrentUserLoadedCallBack(null);
+		}
 	}
 
 	// If the current user auth auth record is not loaded then load it first, the return the
@@ -137,12 +133,15 @@ class FirestoreManager {
 		});
 	}
 
-	__currentUserHasRole(role) {
+	__currentUserHasRole(role) { // TODO: UPDATE ALL FUNCTION
 
-		if(!this._currentUserAuthAuth)
+		if(!this._currentUserAuthAuth) { // TODO: UPDATE
+			Tracer.warn(`__currentUserHasRole() was called, but the variable _currentUserAuthAuth was not loaded with roles`);
 			return false;
-
-		return this._currentUserAuthAuth.roles.indexOf(role) !== -1;
+		}
+		const r = this._currentUserAuthAuth.roles.indexOf(role) !== -1;
+		Tracer.log(`__currentUserHasRole(${role}) : ${r}`, this);
+		return r;
 	}
 
 	// return true if the current user already loaded is an admin.
@@ -154,8 +153,12 @@ class FirestoreManager {
 
 	// https://grokonez.com/android/firebase-authentication-sign-up-sign-in-sign-out-verify-email-android
 	getCurrentUser() {
-
-		return firebase.auth().currentUser;
+		if(this._nativeScriptRunTime)
+			return this._nativeScriptUser;
+			// The NativeScript getCurrentUser return a promise
+			// return firebase.getCurrentUser() => Promise
+		else 
+			return firebase.auth().currentUser;
 	}
 
 	isCurrentUserLoaded() {
@@ -170,7 +173,10 @@ class FirestoreManager {
 
 	getCurrentUserDisplayName() {
 
-		return this.__getCurrentUserProperty("displayName");
+		var r = this.__getCurrentUserProperty("displayName");
+		if(!r) {
+			return this.getCurrentUserEmail();
+		}
 	}
 
 	getCurrentUserEmail() {
@@ -181,9 +187,16 @@ class FirestoreManager {
 	__getCurrentUserProperty(prop) {
 
 		const currentUser = this.getCurrentUser();
-		if(currentUser)
-			return currentUser.providerData[0][prop];
-		return null;			
+		if(currentUser) {
+			if(this._nativeScriptRunTime) {
+				return currentUser[prop];
+			}
+			else {
+				return currentUser.providerData[0][prop];
+			}
+		}
+		Tracer.warn(`currentUser not defined yet, cannot get ${prop}`, this);		
+		return null;	
 	}
 
 	// Return a promise
@@ -194,8 +207,18 @@ class FirestoreManager {
 
 	// Return a promise
 	logOut() {
+
 		this._currentUserAuthAuth = null;
-		return firebase.auth().signOut();
+
+		if(this._nativeScriptRunTime) {
+			firebase.logout();
+			return Promise.resolve();
+		}
+		else {
+			return firebaseWebApi.auth().signOut()
+				.then(() => console.log("Logout OK"))
+				.catch(error => console.log("Logout error: " + JSON.stringify(error)));
+		}
 	}
 
 	// https://firebase.google.com/docs/auth/web/manage-users?authuser=0
