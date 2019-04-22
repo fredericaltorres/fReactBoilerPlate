@@ -25,12 +25,15 @@ import ComponentUtil from './ComponentUtil';
 import TypeUtil from './TypeUtil';
 import TypeDefUtil from './TypeDefUtil';
 
- // In NativeScript mode all the connection properties are passed in the file GoogleService-Info.plist
- // In NativeScript the file returns an empty object
+// In NativeScript mode all the connection properties are passed in the file GoogleService-Info.plist
+// In NativeScript the file returns an empty object
 import FirestoreManagerConfig from './FirestoreManagerConfig';
 
 const DEFAULT_MAX_RECORD = 400;
-const DEFAULT_ID_FIELD_NAME = "id"; // NativeScript firebase library assume that the id field is named 'id'
+
+// NativeScript firebase library assumes that the id field is named 'id'
+// See method __rebuildDocument
+const DEFAULT_ID_FIELD_NAME = "id";
 const UPDATE_AT_PROPERTY_NAME = "updatedAt";
 
 const getSettings = () => {
@@ -41,28 +44,26 @@ const getSettings = () => {
 // This class is exported as a singleton. See export at the end of the file
 class FirestoreManager {
 	
-	
-	
-	
 	constructor(nativeScriptRunTime = false) {
 
 		this.ADMIN_ROLE = "administrator";
-		this._monitoredSnapshot = { }; // Store snapshot unsusbcribe method, to be able to  unsubscribe and stop monitoring data
 		this.batchModeOn = false;
 		this.onCurrentUserLoadedCallBack = null;
 		this.name = "FirestoreManager";
 		this._nativeScriptRunTime = nativeScriptRunTime;
 		this._settings = getSettings();		
+		this._monitoredSnapshot = { }; // Store snapshot unsusbcribe method, to be able to  unsubscribe and stop monitoring data
 		this._currentUserAuthAuth = null;
 		this._nativeScriptUser = null;
-		Tracer.log(`FirestoreManager init`, this);
+		Tracer.log(`FirestoreManager constructor`, this);
 
 		if(this._nativeScriptRunTime) {
-			firebase.init({ 
+			firebase.init({ // In NativeScript mode all the connection properties are passed in the file GoogleService-Info.plist
 				persist: false
 			}).then(
 				instance => {
 					Tracer.log("firebase.init done ", this);
+					// DO WE NEED THIS, Since we have code in usernamePasswordLogin() that call __onNewUserAuthenticated()
 					this.__setUpOnAuthStateChanged();
 				},
 				error => {
@@ -71,8 +72,8 @@ class FirestoreManager {
 			);
 		}
 		else {
-			// initializeApp does not return a promise
-			firebase.initializeApp(FirestoreManagerConfig); 
+			
+			firebase.initializeApp(FirestoreManagerConfig);  // initializeApp does not return a promise
 			this.__setUpOnAuthStateChanged();
 		}
 	}
@@ -120,7 +121,7 @@ class FirestoreManager {
 
 			if(this._currentUserAuthAuth === null) {
 
-				this.__loadUserAuthAuth( this.getCurrentUserUID() ).then( (currentUserAuthAuth) => {
+				this.__loadUserAuthAuthAsync( this.getCurrentUserUID() ).then( (currentUserAuthAuth) => {
 
 					if(currentUserAuthAuth === null) { // current record in _users collection was not found
 
@@ -205,12 +206,14 @@ class FirestoreManager {
 				return currentUser.providerData[0][prop];
 			}
 		}
-		Tracer.warn(`currentUser not defined yet, cannot get ${prop}`, this);		
-		return null;	
+		else {
+			Tracer.warn(`currentUser not defined yet, cannot get ${prop}`, this);
+			return null;	
+		}
 	}
 
 	// Return a promise
-	__loadUserAuthAuth(uid) {
+	__loadUserAuthAuthAsync(uid) {
 
 		return this.loadDocument('_users', uid, null, false);
 	}
@@ -284,7 +287,7 @@ class FirestoreManager {
 		});
 	}
 
-	getFirestoreDB() {
+	__getFirestoreDB() {
 
 		if(this._firestoreDb) 
 			return this._firestoreDb;
@@ -404,14 +407,14 @@ class FirestoreManager {
 
 	getCollection(name) {
 
-		return this.getFirestoreDB().collection(name);
+		return this.__getFirestoreDB().collection(name);
 	}
 
 	startBatch() {
 		
 		Tracer.log(`startBatch`, this);
 		this.batchModeOn = true;
-		return this.getFirestoreDB().batch();
+		return this.__getFirestoreDB().batch();
 	}
 
 	commitBatch(batch) {
