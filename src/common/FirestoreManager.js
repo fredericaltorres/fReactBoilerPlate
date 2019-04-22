@@ -228,6 +228,35 @@ class FirestoreManager {
 	}
 
 	// https://firebase.google.com/docs/auth/web/manage-users?authuser=0
+	// https://github.com/eddyverbruggen/nativescript-plugin-firebase/blob/master/docs/AUTHENTICATION.md#google-sign-in
+	usernamePasswordLogin(email, password) {
+		
+		Tracer.log(`usernamePasswordLogin`, this);
+		const $this = this;
+
+		if(this._nativeScriptRunTime) {
+			return firebase.login(
+				{
+				type: firebase.LoginType.PASSWORD,
+				passwordOptions: {
+					email: email,
+					password: password,
+				}
+			})
+			.then(user => {
+				const s = JSON.stringify(user);
+				Tracer.log(`usernamePasswordLogin user:${s}`, $this);
+				this._nativeScriptUser = user;
+				this.__onNewUserAuthenticated(user);
+			})
+			.catch(error => console.log(error));
+		}
+		else {
+			throw "usernamePasswordLogin() not implemented for browser mode";
+		}
+	}
+
+	// https://firebase.google.com/docs/auth/web/manage-users?authuser=0
 	googleLogin() {
 
 		return new Promise((resolve, reject) => {
