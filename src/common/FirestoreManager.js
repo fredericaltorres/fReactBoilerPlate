@@ -19,6 +19,7 @@
 
 	Torres Frederic 2018, 2019.
 */
+import firebase from "nativescript-plugin-firebase";
 import Tracer from './Tracer';
 import moment from "moment"; // http://momentjs.com/
 import ComponentUtil from './ComponentUtil';
@@ -55,7 +56,8 @@ class FirestoreManager {
 		this._monitoredSnapshot = { }; // Store snapshot unsusbcribe method, to be able to  unsubscribe and stop monitoring data
 		this._currentUserAuthAuth = null;
 		this._nativeScriptUser = null;
-		Tracer.log(`FirestoreManager constructor`, this);
+		Tracer.coloredConsole = false; // firebaseManager is loaded before app.js
+		Tracer.log(`FirestoreManager constructor(nativeScriptRunTime:${nativeScriptRunTime})`, this);
 
 		if(this._nativeScriptRunTime) {
 			firebase.init({ // In NativeScript mode all the connection properties are passed in the file GoogleService-Info.plist
@@ -738,4 +740,10 @@ class FirestoreManager {
 
 FirestoreManager._initialized = false;
 
-export default new FirestoreManager();
+function isNativeScript() {
+    if(typeof(global))
+        return global.toString().indexOf("NativeScriptGlobal") > 0;
+    return false;
+}
+
+export default new FirestoreManager(isNativeScript());
