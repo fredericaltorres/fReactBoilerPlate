@@ -19,7 +19,10 @@
 
 	Torres Frederic 2018, 2019.
 */
+
+// DEFINE THIS IMPORT AT BUILD TIME
 import firebase from "nativescript-plugin-firebase";
+
 import Tracer from './Tracer';
 import moment from "moment"; // http://momentjs.com/
 import ComponentUtil from './ComponentUtil';
@@ -737,8 +740,6 @@ class FirestoreManager {
 		return d === 'desc' ? "[D]" : "[A]";
 	}
 }  
-
-FirestoreManager._initialized = false;
 
 function isNativeScript() {
     if(typeof(global))
